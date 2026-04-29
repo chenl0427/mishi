@@ -1,0 +1,18 @@
+{
+  "name": "escape-room-3d",
+  "version": "1.0.0",
+  "description": "🔐 密室逃脱 - A 3D first-person escape room game built with Three.js",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "start:node": "npx serve . -p 8080",
+    "deploy": "bash deploy.sh",
+    "lint": "echo 'No linter configured'",
+    "test": "echo 'Open index.html in browser to play'"
+  },
+  "keywords": ["game", "escape-room", "three.js", "3d", "puzzle", "first-person"],
+  "author": "DARK ROOM STUDIOS",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}

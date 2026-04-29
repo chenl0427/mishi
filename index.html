@@ -3,1511 +3,498 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🔐 密室逃脱 - Escape Room</title>
+<title>🔐 密室逃脱 - ESCAPE ROOM</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-body{overflow:hidden;background:#000;font-family:'Segoe UI','PingFang SC',sans-serif;cursor:none}
+body{font-family:'Noto Sans SC',sans-serif;background:#000;color:#fff;overflow:hidden;height:100vh}
 canvas{display:block}
 
-/* ── Crosshair ── */
-#crosshair{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  z-index:20;pointer-events:none;
+/* ── Studio Intro ── */
+#studio-intro{
+  position:fixed;inset:0;z-index:200;
+  background:#000;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+  animation:fadeOut 1s 4s forwards;
 }
-#crosshair::before,#crosshair::after{
-  content:'';position:absolute;background:rgba(255,255,255,0.7);
+@keyframes fadeOut{to{opacity:0;pointer-events:none}}
+.studio-logo{
+  font-size:48px;font-weight:900;letter-spacing:8px;
+  color:rgba(255,255,255,0);animation:logoIn 2s 0.5s forwards;
 }
-#crosshair::before{width:20px;height:2px;top:-1px;left:-10px}
-#crosshair::after{width:2px;height:20px;top:-10px;left:-1px}
-#crosshair-dot{
-  position:absolute;top:-2px;left:-2px;width:4px;height:4px;
-  border-radius:50%;background:rgba(255,100,100,0.8);
+@keyframes logoIn{
+  0%{color:rgba(255,255,255,0);letter-spacing:30px;filter:blur(10px)}
+  50%{color:rgba(255,255,255,0.9);letter-spacing:8px;filter:blur(0)}
+  100%{color:rgba(255,255,255,0.9);letter-spacing:8px;filter:blur(0)}
 }
+.studio-sub{
+  font-size:12px;color:rgba(255,255,255,0);letter-spacing:6px;
+  text-transform:uppercase;margin-top:12px;
+  animation:subIn 1.5s 1.5s forwards;
+}
+@keyframes subIn{to{color:rgba(255,255,255,0.4)}}
+.studio-line{
+  width:0;height:1px;background:rgba(255,255,255,0.3);
+  animation:lineIn 1s 1s forwards;margin-top:20px;
+}
+@keyframes lineIn{to{width:200px}}
 
-/* ── Start Screen ── */
-#start-screen{
+/* ── Main Menu ── */
+#main-menu{
   position:fixed;inset:0;z-index:100;
-  background:linear-gradient(135deg,#0a0a0a 0%,#1a0a0a 50%,#0a0a1a 100%);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  transition:opacity 1s;
+  display:flex;
+  opacity:0;animation:fadeIn 1.5s 5s forwards;
 }
-#start-screen.hidden{opacity:0;pointer-events:none}
-#start-screen h1{
-  font-size:72px;font-weight:900;
+@keyframes fadeIn{to{opacity:1}}
+.menu-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(80,20,20,0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(20,20,60,0.3) 0%, transparent 50%),
+    linear-gradient(180deg, #080808 0%, #0a0505 50%, #050508 100%);
+}
+.menu-particles{position:absolute;inset:0;overflow:hidden}
+.menu-particle{
+  position:absolute;width:1px;height:1px;
+  background:rgba(255,80,40,0.3);border-radius:50%;
+  animation:menuFloat 12s infinite ease-in-out;
+}
+@keyframes menuFloat{
+  0%,100%{transform:translateY(0);opacity:0.2}
+  50%{transform:translateY(-150px);opacity:0.6}
+}
+.menu-left{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;justify-content:center;
+  padding-left:10%;width:50%;
+}
+.menu-title{
+  font-size:clamp(52px,7vw,84px);font-weight:900;
   background:linear-gradient(135deg,#ff4444,#ff8844,#ff4444);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  margin-bottom:8px;animation:flicker 3s ease-in-out infinite;
+  line-height:1.1;margin-bottom:8px;
+  animation:menuGlitch 8s infinite;
 }
-@keyframes flicker{
-  0%,100%{opacity:1}50%{opacity:0.8}52%{opacity:1}54%{opacity:0.7}56%{opacity:1}
+@keyframes menuGlitch{
+  0%,97%,100%{transform:none;filter:none}
+  97.5%{transform:translate(-2px,1px);filter:hue-rotate(20deg)}
+  98%{transform:translate(2px,-1px);filter:hue-rotate(-20deg)}
+  98.5%{transform:none;filter:none}
 }
-.subtitle{color:rgba(255,255,255,0.4);font-size:16px;letter-spacing:6px;text-transform:uppercase;margin-bottom:50px}
-.start-btn{
-  padding:18px 60px;font-size:20px;font-weight:700;
-  background:linear-gradient(135deg,#aa2222,#cc4444);
-  border:none;border-radius:50px;color:#fff;cursor:pointer;
-  letter-spacing:2px;text-transform:uppercase;
-  transition:transform 0.2s,box-shadow 0.2s;
+.menu-subtitle{
+  font-size:14px;color:rgba(255,255,255,0.3);letter-spacing:8px;
+  text-transform:uppercase;margin-bottom:60px;
 }
-.start-btn:hover{transform:scale(1.05);box-shadow:0 0 40px rgba(255,50,50,0.4)}
-.story-text{
-  max-width:500px;text-align:center;color:rgba(255,255,255,0.5);
-  font-size:14px;line-height:1.8;margin-bottom:40px;
+.menu-buttons{display:flex;flex-direction:column;gap:12px}
+.menu-btn{
+  display:flex;align-items:center;gap:16px;
+  padding:16px 32px;width:fit-content;min-width:240px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.06);border-radius:12px;
+  color:rgba(255,255,255,0.7);font-size:16px;font-weight:700;
+  cursor:pointer;transition:all 0.3s;text-decoration:none;
+  font-family:inherit;
+}
+.menu-btn:hover{
+  background:rgba(255,100,50,0.1);
+  border-color:rgba(255,100,50,0.3);
+  color:#fff;transform:translateX(8px);
+  box-shadow:0 0 30px rgba(255,100,50,0.1);
+}
+.menu-btn .btn-icon{font-size:24px;width:32px;text-align:center}
+.menu-btn .btn-arrow{
+  margin-left:auto;font-size:12px;
+  opacity:0;transform:translateX(-10px);transition:all 0.3s;
+}
+.menu-btn:hover .btn-arrow{opacity:0.5;transform:translateX(0)}
+
+.menu-right{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  align-items:flex-end;padding:0 5% 8% 0;width:50%;
+}
+.menu-version{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:rgba(255,255,255,0.15);text-align:right;line-height:1.8;
+}
+.menu-credits-mini{
+  font-size:11px;color:rgba(255,255,255,0.1);
+  text-align:right;margin-top:20px;line-height:1.6;
 }
 
-/* ── HUD ── */
-#interaction-prompt{
-  position:fixed;bottom:35%;left:50%;transform:translateX(-50%);
-  z-index:15;padding:10px 24px;
-  background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);
-  border:1px solid rgba(255,255,255,0.15);border-radius:10px;
-  color:#fff;font-size:14px;pointer-events:none;
-  opacity:0;transition:opacity 0.2s;
-}
-#interaction-prompt.show{opacity:1}
-#interaction-prompt .key{
-  display:inline-block;padding:2px 8px;margin:0 4px;
-  background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);
-  border-radius:4px;font-family:monospace;font-size:12px;
-}
-
-/* ── Inventory ── */
-#inventory{
-  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
-  z-index:15;display:flex;gap:8px;pointer-events:all;
-}
-.inv-slot{
-  width:64px;height:64px;
-  background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
-  border:2px solid rgba(255,255,255,0.1);border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:28px;cursor:pointer;transition:all 0.2s;
-  position:relative;
-}
-.inv-slot:hover{border-color:rgba(255,255,255,0.4);transform:translateY(-3px)}
-.inv-slot.selected{border-color:#ff6644;box-shadow:0 0 15px rgba(255,100,50,0.4)}
-.inv-slot .inv-name{
-  position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);
-  font-size:9px;color:rgba(255,255,255,0.5);white-space:nowrap;
-}
-
-/* ── Message / Dialog ── */
-#message{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  z-index:50;max-width:500px;width:90%;padding:24px 32px;
-  background:rgba(0,0,0,0.85);backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,0.15);border-radius:16px;
-  color:#fff;font-size:15px;line-height:1.8;
-  opacity:0;transition:opacity 0.3s;pointer-events:none;
-  text-align:center;
-}
-#message.show{opacity:1;pointer-events:all}
-#message .msg-title{font-size:20px;font-weight:700;margin-bottom:12px;color:#ff8866}
-#message .msg-close{
-  margin-top:16px;padding:8px 24px;
-  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
-  border-radius:8px;color:#fff;cursor:pointer;font-size:13px;
-}
-#message .msg-close:hover{background:rgba(255,255,255,0.2)}
-
-/* ── Code Input ── */
-#code-input{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  z-index:55;padding:24px 32px;
-  background:rgba(0,0,0,0.9);backdrop-filter:blur(16px);
-  border:1px solid rgba(255,100,50,0.3);border-radius:16px;
-  color:#fff;text-align:center;
-  opacity:0;transition:opacity 0.3s;pointer-events:none;
-}
-#code-input.show{opacity:1;pointer-events:all}
-#code-input h3{margin-bottom:16px;color:#ff8866}
-#code-input input{
-  width:200px;padding:10px;font-size:24px;text-align:center;
-  background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);
-  border-radius:8px;color:#fff;letter-spacing:8px;font-family:monospace;
-}
-#code-input .code-btns{margin-top:16px;display:flex;gap:10px;justify-content:center}
-#code-input .code-btn{
-  padding:8px 20px;border:none;border-radius:8px;cursor:pointer;font-size:13px;
-}
-#code-input .code-ok{background:#44aa44;color:#fff}
-#code-input .code-cancel{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2)}
-
-/* ── Notebook ── */
-#notebook{
-  position:fixed;top:20px;right:20px;z-index:15;
-  width:200px;max-height:300px;overflow-y:auto;
-  padding:12px 16px;
-  background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
-  border:1px solid rgba(255,255,255,0.1);border-radius:10px;
-  color:rgba(255,255,255,0.7);font-size:12px;line-height:1.6;
-  pointer-events:none;
-}
-#notebook h4{color:#ff8866;margin-bottom:8px;font-size:13px}
-#notebook .note{margin:4px 0;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
-
-/* ── Timer ── */
-#timer{
-  position:fixed;top:20px;left:20px;z-index:15;
-  font-size:28px;font-weight:700;font-family:monospace;
-  color:rgba(255,255,255,0.6);text-shadow:0 2px 8px rgba(0,0,0,0.5);
-}
-
-/* ── Win Screen ── */
-#win-screen{
-  position:fixed;inset:0;z-index:100;
-  background:rgba(0,0,0,0.9);
+/* ── Loading Screen ── */
+#loading-screen{
+  position:fixed;inset:0;z-index:150;
+  background:#080808;
   display:none;flex-direction:column;align-items:center;justify-content:center;
 }
-#win-screen.show{display:flex}
-#win-screen h1{font-size:64px;color:#44ff44;margin-bottom:10px}
-#win-screen .win-time{font-size:24px;color:rgba(255,255,255,0.7);margin-bottom:30px}
-#win-screen .restart-btn{
-  padding:14px 50px;font-size:18px;font-weight:700;
-  background:linear-gradient(135deg,#44aa44,#66cc66);
-  border:none;border-radius:50px;color:#fff;cursor:pointer;
+#loading-screen.show{display:flex}
+.loading-title{
+  font-size:28px;font-weight:900;
+  background:linear-gradient(135deg,#ff4444,#ff8844);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:40px;
+}
+.loading-bar-container{
+  width:300px;height:3px;
+  background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;
+}
+.loading-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#ff4444,#ff8844);
+  border-radius:2px;transition:width 0.3s;
+}
+.loading-text{
+  margin-top:16px;font-size:12px;
+  color:rgba(255,255,255,0.3);font-family:'JetBrains Mono',monospace;
+}
+.loading-tips{
+  position:absolute;bottom:60px;
+  font-size:13px;color:rgba(255,255,255,0.25);
+  max-width:400px;text-align:center;line-height:1.6;
+}
+.loading-version{
+  position:absolute;bottom:20px;
+  font-size:10px;color:rgba(255,255,255,0.1);
+  font-family:'JetBrains Mono',monospace;
 }
 
-/* ── Hint System ── */
-#hint-btn{
-  position:fixed;bottom:100px;right:20px;z-index:15;
-  width:44px;height:44px;border-radius:50%;
-  background:rgba(255,200,50,0.2);border:1px solid rgba(255,200,50,0.4);
-  color:#ffcc33;font-size:20px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
+/* ── Settings Panel ── */
+#settings-panel{
+  position:fixed;inset:0;z-index:110;
+  background:rgba(0,0,0,0.95);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+}
+#settings-panel.show{display:flex}
+.settings-box{
+  width:500px;max-width:90%;padding:40px;
+  background:rgba(255,255,255,0.02);
+  border:1px solid rgba(255,255,255,0.06);border-radius:16px;
+}
+.settings-box h2{
+  font-size:24px;margin-bottom:30px;
+  color:rgba(255,255,255,0.8);
+}
+.setting-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:14px;color:rgba(255,255,255,0.6)}
+.setting-control{display:flex;align-items:center;gap:12px}
+.toggle{
+  width:44px;height:24px;border-radius:12px;
+  background:rgba(255,255,255,0.1);cursor:pointer;
+  position:relative;transition:background 0.3s;
+}
+.toggle.active{background:rgba(255,100,50,0.5)}
+.toggle::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:18px;height:18px;border-radius:50%;
+  background:#fff;transition:transform 0.3s;
+}
+.toggle.active::after{transform:translateX(20px)}
+.slider{
+  width:120px;height:4px;border-radius:2px;
+  background:rgba(255,255,255,0.1);cursor:pointer;
+  position:relative;
+}
+.slider-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,#ff4444,#ff8844);
+}
+.slider-handle{
+  position:absolute;top:-6px;
+  width:16px;height:16px;border-radius:50%;
+  background:#fff;cursor:pointer;
+  transform:translateX(-50%);
+}
+.settings-close{
+  margin-top:30px;padding:12px 40px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);border-radius:8px;
+  color:#fff;cursor:pointer;font-size:14px;font-family:inherit;
+}
+.settings-close:hover{background:rgba(255,255,255,0.1)}
+
+/* ── Credits Panel ── */
+#credits-panel{
+  position:fixed;inset:0;z-index:110;
+  background:rgba(0,0,0,0.95);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+#credits-panel.show{display:flex}
+.credits-scroll{
+  text-align:center;animation:scrollCredits 20s linear infinite;
+}
+@keyframes scrollCredits{
+  0%{transform:translateY(100vh)}
+  100%{transform:translateY(-200vh)}
+}
+.credits-scroll h2{font-size:28px;color:#ff8866;margin:40px 0 10px}
+.credits-scroll h3{font-size:16px;color:rgba(255,255,255,0.6);margin:30px 0 8px}
+.credits-scroll p{font-size:14px;color:rgba(255,255,255,0.35);line-height:1.8}
+.credits-close{
+  position:absolute;bottom:40px;
+  padding:12px 40px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);border-radius:8px;
+  color:#fff;cursor:pointer;font-size:14px;font-family:inherit;
+}
+
+/* ── In-Game HUD (shared with game) ── */
+#game-container{position:fixed;inset:0;z-index:50;display:none}
+#game-container.show{display:block}
+
+/* ── Scanline Overlay ── */
+.scanlines{
+  position:fixed;inset:0;pointer-events:none;z-index:999;
+  background:repeating-linear-gradient(
+    0deg,transparent,transparent 2px,
+    rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px
+  );
+}
+
+/* ── Vignette ── */
+.vignette{
+  position:fixed;inset:0;pointer-events:none;z-index:998;
+  background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,0.6) 100%);
+}
+
+/* ── Film Grain ── */
+.film-grain{
+  position:fixed;inset:0;pointer-events:none;z-index:997;
+  opacity:0.02;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 0.5s steps(1) infinite;
+}
+@keyframes grain{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(-2px,2px)}
+  50%{transform:translate(2px,-2px)}
+  75%{transform:translate(-2px,-2px)}
+  100%{transform:translate(2px,2px)}
 }
 </style>
 </head>
 <body>
 
-<div id="start-screen">
-  <h1>密室逃脱</h1>
-  <div class="subtitle">ESCAPE ROOM</div>
-  <div class="story-text">
-    你在一间陌生的房间里醒来，头痛欲裂。<br>
-    门被锁住了，灯忽明忽暗。<br>
-    你必须找到线索，解开谜题，逃出去。<br>
-    时间不多了……
-  </div>
-  <button class="start-btn" onclick="startGame()">开始逃脱</button>
+<!-- ── Studio Intro ── -->
+<div id="studio-intro">
+  <div class="studio-logo">DARK ROOM</div>
+  <div class="studio-line"></div>
+  <div class="studio-sub">STUDIOS</div>
 </div>
 
-<div id="crosshair" style="display:none"><div id="crosshair-dot"></div></div>
-<div id="interaction-prompt"></div>
-<div id="inventory" style="display:none"></div>
-<div id="notebook" style="display:none"><h4>📝 笔记</h4></div>
-<div id="timer" style="display:none">00:00</div>
-<div id="hint-btn" style="display:none" onclick="showHint()">💡</div>
-<div id="message">
-  <div class="msg-title" id="msg-title"></div>
-  <div id="msg-body"></div>
-  <button class="msg-close" onclick="closeMessage()">确定</button>
-</div>
-<div id="code-input">
-  <h3 id="code-title">输入密码</h3>
-  <input type="text" id="code-field" maxlength="4" placeholder="----">
-  <div class="code-btns">
-    <button class="code-btn code-ok" onclick="submitCode()">确认</button>
-    <button class="code-btn code-cancel" onclick="closeCodeInput()">取消</button>
+<!-- ── Main Menu ── -->
+<div id="main-menu">
+  <div class="menu-bg"></div>
+  <div class="menu-particles" id="menu-particles"></div>
+  
+  <div class="menu-left">
+    <div class="menu-title">密室逃脱</div>
+    <div class="menu-subtitle">ESCAPE ROOM</div>
+    <div class="menu-buttons">
+      <button class="menu-btn" onclick="startGame()">
+        <span class="btn-icon">▶</span>
+        <span>开始游戏</span>
+        <span class="btn-arrow">→</span>
+      </button>
+      <button class="menu-btn" onclick="showSettings()">
+        <span class="btn-icon">⚙</span>
+        <span>设置</span>
+        <span class="btn-arrow">→</span>
+      </button>
+      <button class="menu-btn" onclick="showCredits()">
+        <span class="btn-icon">👥</span>
+        <span>制作人员</span>
+        <span class="btn-arrow">→</span>
+      </button>
+      <a class="menu-btn" href="landing.html" target="_blank">
+        <span class="btn-icon">📖</span>
+        <span>游戏详情</span>
+        <span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="menu-right">
+    <div class="menu-version">
+      BUILD 2026.04.29<br>
+      VERSION 1.0.0<br>
+      ENGINE: THREE.JS R128
+    </div>
+    <div class="menu-credits-mini">
+      © 2026 DARK ROOM STUDIOS<br>
+      ALL RIGHTS RESERVED
+    </div>
   </div>
 </div>
-<div id="win-screen">
-  <h1>🎉 成功逃脱！</h1>
-  <div class="win-time" id="win-time">用时: 00:00</div>
-  <button class="restart-btn" onclick="location.reload()">再来一次</button>
+
+<!-- ── Loading Screen ── -->
+<div id="loading-screen">
+  <div class="loading-title">密室逃脱</div>
+  <div class="loading-bar-container">
+    <div class="loading-bar" id="loading-bar"></div>
+  </div>
+  <div class="loading-text" id="loading-text">INITIALIZING...</div>
+  <div class="loading-tips" id="loading-tip">提示：仔细观察房间里的每一个物体</div>
+  <div class="loading-version">v1.0.0 | THREE.JS R128 | WEBGL 2.0</div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- ── Settings ── -->
+<div id="settings-panel">
+  <div class="settings-box">
+    <h2>⚙ 设置</h2>
+    <div class="setting-row">
+      <span class="setting-label">音效</span>
+      <div class="setting-control">
+        <div class="toggle active" id="toggle-sfx" onclick="toggleSetting(this)"></div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">背景音乐</span>
+      <div class="setting-control">
+        <div class="toggle active" id="toggle-music" onclick="toggleSetting(this)"></div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">鼠标灵敏度</span>
+      <div class="setting-control">
+        <div class="slider" id="sensitivity-slider">
+          <div class="slider-fill" style="width:50%"></div>
+          <div class="slider-handle" style="left:50%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">画面质量</span>
+      <div class="setting-control">
+        <span style="font-size:13px;color:rgba(255,255,255,0.5)">高</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">显示提示</span>
+      <div class="setting-control">
+        <div class="toggle active" id="toggle-hints" onclick="toggleSetting(this)"></div>
+      </div>
+    </div>
+    <button class="settings-close" onclick="hideSettings()">返回</button>
+  </div>
+</div>
+
+<!-- ── Credits ── -->
+<div id="credits-panel">
+  <div class="credits-scroll">
+    <h2>密室逃脱</h2>
+    <p>ESCAPE ROOM</p>
+    
+    <h3>游戏设计</h3>
+    <p>DARK ROOM STUDIOS</p>
+    
+    <h3>程序开发</h3>
+    <p>THREE.JS · WEB AUDIO API · POINTER LOCK</p>
+    
+    <h3>美术设计</h3>
+    <p>程序化纹理生成 · 实时渲染</p>
+    
+    <h3>音效设计</h3>
+    <p>WEB AUDIO API 合成音效</p>
+    
+    <h3>特别感谢</h3>
+    <p>THREE.JS 开源社区<br>所有测试玩家</p>
+    
+    <h3>技术栈</h3>
+    <p>THREE.JS R128<br>WEBGL 2.0<br>CANVAS 2D<br>WEB AUDIO API<br>POINTER LOCK API</p>
+    
+    <p style="margin-top:60px;color:rgba(255,255,255,0.2)">
+      © 2026 DARK ROOM STUDIOS<br>
+      ALL RIGHTS RESERVED
+    </p>
+  </div>
+  <button class="credits-close" onclick="hideCredits()">返回</button>
+</div>
+
+<!-- ── Overlays ── -->
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div class="film-grain"></div>
+
 <script>
-// ═══════════════════════════════════════════════
-// 🔐 密室逃脱 - First Person Escape Room
-// ═══════════════════════════════════════════════
-
-let scene, camera, renderer, clock;
-let gameStarted = false, gameWon = false;
-let yaw = 0, pitch = 0;
-let velocity = new THREE.Vector3();
-let moveForward = false, moveBack = false, moveLeft = false, moveRight = false;
-let isSprinting = false;
-let playerHeight = 1.7;
-let canInteract = false, currentInteractable = null;
-let inventory = [], selectedSlot = -1;
-let notes = [];
-let codeCallback = null;
-let elapsedTime = 0;
-let flashlight, flashlightTarget;
-let ambientLight;
-let hintIndex = 0;
-
-const ROOM_W = 12, ROOM_H = 3.5, ROOM_D = 10;
-const MOVE_SPEED = 4, SPRINT_SPEED = 7;
-
-// ── Puzzle State ──
-const puzzleState = {
-  drawerUnlocked: false,
-  safeOpened: false,
-  hasBookClue: false,
-  hasDrawerKey: false,
-  doorUnlocked: false,
-  lampOn: false,
-  paintingMoved: false,
-  clockFixed: false,
-  codeDigits: [0, 0, 0, 0],
-  hiddenNoteFound: false,
-  wardrobeOpened: false,
-};
-
-// ── Room Objects ──
-let interactables = [];
-let roomObjects = {};
-
-// ── Sounds (Web Audio) ──
-let audioCtx;
-function playSound(freq, duration, type = 'sine', vol = 0.1) {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = type;
-  osc.frequency.value = freq;
-  gain.gain.value = vol;
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + duration);
+// ── Menu Particles ──
+const particleContainer = document.getElementById('menu-particles');
+for (let i = 0; i < 40; i++) {
+  const p = document.createElement('div');
+  p.className = 'menu-particle';
+  p.style.left = Math.random() * 100 + '%';
+  p.style.top = Math.random() * 100 + '%';
+  p.style.animationDelay = Math.random() * 12 + 's';
+  p.style.animationDuration = (8 + Math.random() * 8) + 's';
+  particleContainer.appendChild(p);
 }
 
-function playClick() { playSound(800, 0.1, 'sine', 0.05); }
-function playSuccess() { playSound(523, 0.15); setTimeout(() => playSound(659, 0.15), 150); setTimeout(() => playSound(784, 0.3), 300); }
-function playError() { playSound(200, 0.3, 'sawtooth', 0.05); }
-function playUnlock() { playSound(440, 0.1); setTimeout(() => playSound(554, 0.1), 100); setTimeout(() => playSound(659, 0.2), 200); }
-function playDoor() { playSound(100, 0.5, 'square', 0.03); }
-
-// ── Pointer Lock ──
-function initPointerLock() {
-  const canvas = renderer.domElement;
-  canvas.addEventListener('click', () => {
-    if (!gameStarted || gameWon) return;
-    canvas.requestPointerLock();
-  });
-  document.addEventListener('pointerlockchange', () => {
-    if (document.pointerLockElement === canvas) {
-      document.addEventListener('mousemove', onMouseMove);
-    } else {
-      document.removeEventListener('mousemove', onMouseMove);
-    }
-  });
-}
-
-function onMouseMove(e) {
-  yaw -= e.movementX * 0.002;
-  pitch -= e.movementY * 0.002;
-  pitch = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, pitch));
-}
-
-// ── Input ──
-window.addEventListener('keydown', e => {
-  if (e.code === 'KeyW') moveForward = true;
-  if (e.code === 'KeyS') moveBack = true;
-  if (e.code === 'KeyA') moveLeft = true;
-  if (e.code === 'KeyD') moveRight = true;
-  if (e.code === 'ShiftLeft') isSprinting = true;
-  if (e.code === 'KeyE') tryInteract();
-  if (e.code === 'Escape') {
-    closeMessage();
-    closeCodeInput();
-  }
-});
-window.addEventListener('keyup', e => {
-  if (e.code === 'KeyW') moveForward = false;
-  if (e.code === 'KeyS') moveBack = false;
-  if (e.code === 'KeyA') moveLeft = false;
-  if (e.code === 'KeyD') moveRight = false;
-  if (e.code === 'ShiftLeft') isSprinting = false;
-});
-
-// ── Scene Setup ──
-function initScene() {
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x050505);
-  clock = new THREE.Clock();
-
-  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 100);
-  camera.position.set(0, playerHeight, 3);
-
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.6;
-  renderer.outputEncoding = THREE.sRGBEncoding;
-  document.body.appendChild(renderer.domElement);
-
-  // Dim ambient
-  ambientLight = new THREE.AmbientLight(0x222233, 0.15);
-  scene.add(ambientLight);
-
-  // Ceiling light (flickering)
-  const ceilingLight = new THREE.PointLight(0xffddaa, 0.8, 12, 2);
-  ceilingLight.position.set(0, ROOM_H - 0.3, 0);
-  ceilingLight.castShadow = true;
-  ceilingLight.shadow.mapSize.set(512, 512);
-  scene.add(ceilingLight);
-  roomObjects.ceilingLight = ceilingLight;
-
-  // Flashlight
-  flashlight = new THREE.SpotLight(0xffeedd, 1.5, 15, Math.PI / 5, 0.3, 1);
-  flashlight.castShadow = true;
-  flashlight.shadow.mapSize.set(512, 512);
-  scene.add(flashlight);
-  flashlightTarget = new THREE.Object3D();
-  scene.add(flashlightTarget);
-  flashlight.target = flashlightTarget;
-
-  // Desk lamp (initially off)
-  const deskLamp = new THREE.PointLight(0xffcc66, 0, 6, 2);
-  deskLamp.position.set(-3.5, 2.2, -2);
-  scene.add(deskLamp);
-  roomObjects.deskLamp = deskLamp;
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-}
-
-// ── Create Room ──
-function createRoom() {
-  // Floor
-  const floorCanvas = document.createElement('canvas');
-  floorCanvas.width = 512; floorCanvas.height = 512;
-  const fctx = floorCanvas.getContext('2d');
-  // Wood floor pattern
-  for (let y = 0; y < 512; y += 32) {
-    for (let x = 0; x < 512; x += 128) {
-      const shade = 30 + Math.random() * 20;
-      fctx.fillStyle = `rgb(${shade+20},${shade+10},${shade-5})`;
-      fctx.fillRect(x, y, 126, 30);
-      fctx.strokeStyle = `rgba(0,0,0,0.3)`;
-      fctx.lineWidth = 1;
-      fctx.strokeRect(x, y, 126, 30);
-      // Wood grain
-      for (let g = 0; g < 5; g++) {
-        fctx.strokeStyle = `rgba(${shade+30},${shade+15},${shade},0.15)`;
-        fctx.beginPath();
-        fctx.moveTo(x + Math.random()*126, y + Math.random()*30);
-        fctx.lineTo(x + Math.random()*126, y + Math.random()*30);
-        fctx.stroke();
-      }
-    }
-  }
-  const floorTex = new THREE.CanvasTexture(floorCanvas);
-  floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
-  floorTex.repeat.set(3, 3);
-  const floorMat = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.8 });
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), floorMat);
-  floor.rotation.x = -Math.PI / 2;
-  floor.receiveShadow = true;
-  scene.add(floor);
-
-  // Ceiling
-  const ceilMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.95 });
-  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), ceilMat);
-  ceil.rotation.x = Math.PI / 2;
-  ceil.position.y = ROOM_H;
-  scene.add(ceil);
-
-  // Walls
-  const wallCanvas = document.createElement('canvas');
-  wallCanvas.width = 512; wallCanvas.height = 512;
-  const wctx = wallCanvas.getContext('2d');
-  wctx.fillStyle = '#2a2520';
-  wctx.fillRect(0, 0, 512, 512);
-  // Wallpaper pattern - subtle stripes
-  for (let x = 0; x < 512; x += 32) {
-    wctx.fillStyle = x % 64 === 0 ? 'rgba(50,40,35,0.5)' : 'rgba(35,30,25,0.3)';
-    wctx.fillRect(x, 0, 32, 512);
-  }
-  // Texture noise
-  for (let i = 0; i < 3000; i++) {
-    wctx.fillStyle = `rgba(${40+Math.random()*30},${35+Math.random()*25},${30+Math.random()*20},0.08)`;
-    wctx.fillRect(Math.random()*512, Math.random()*512, 2, 2);
-  }
-  // Stain / aging
-  for (let i = 0; i < 5; i++) {
-    const gx = Math.random()*512, gy = Math.random()*512;
-    const gr = 20+Math.random()*40;
-    const grad = wctx.createRadialGradient(gx,gy,0,gx,gy,gr);
-    grad.addColorStop(0,'rgba(20,15,10,0.15)');
-    grad.addColorStop(1,'rgba(20,15,10,0)');
-    wctx.fillStyle = grad;
-    wctx.fillRect(gx-gr,gy-gr,gr*2,gr*2);
-  }
-
-  const wallTex = new THREE.CanvasTexture(wallCanvas);
-  wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
-  wallTex.repeat.set(2, 1);
-
-  const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.9 });
-
-  // Back wall (with door)
-  const backWall = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_H), wallMat);
-  backWall.position.set(0, ROOM_H/2, -ROOM_D/2);
-  backWall.receiveShadow = true;
-  scene.add(backWall);
-
-  // Front wall
-  const frontWall = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_H), wallMat);
-  frontWall.position.set(0, ROOM_H/2, ROOM_D/2);
-  frontWall.rotation.y = Math.PI;
-  frontWall.receiveShadow = true;
-  scene.add(frontWall);
-
-  // Left wall
-  const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_D, ROOM_H), wallMat);
-  leftWall.position.set(-ROOM_W/2, ROOM_H/2, 0);
-  leftWall.rotation.y = Math.PI/2;
-  leftWall.receiveShadow = true;
-  scene.add(leftWall);
-
-  // Right wall
-  const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_D, ROOM_H), wallMat);
-  rightWall.position.set(ROOM_W/2, ROOM_H/2, 0);
-  rightWall.rotation.y = -Math.PI/2;
-  rightWall.receiveShadow = true;
-  scene.add(rightWall);
-
-  // Ceiling light fixture
-  const fixtureGeo = new THREE.CylinderGeometry(0.3, 0.4, 0.15, 8);
-  const fixtureMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7 });
-  const fixture = new THREE.Mesh(fixtureGeo, fixtureMat);
-  fixture.position.set(0, ROOM_H - 0.05, 0);
-  scene.add(fixture);
-
-  const bulbGeo = new THREE.SphereGeometry(0.12, 8, 8);
-  const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffeedd, emissive: 0xffddaa, emissiveIntensity: 0.5 });
-  const bulb = new THREE.Mesh(bulbGeo, bulbMat);
-  bulb.position.set(0, ROOM_H - 0.2, 0);
-  scene.add(bulb);
-  roomObjects.bulb = bulb;
-
-  // Ceiling light cord
-  const cordGeo = new THREE.CylinderGeometry(0.01, 0.01, 0.3, 4);
-  const cordMat = new THREE.MeshBasicMaterial({ color: 0x222222 });
-  const cord = new THREE.Mesh(cordGeo, cordMat);
-  cord.position.set(0, ROOM_H - 0.05, 0);
-  scene.add(cord);
-}
-
-// ── Create Door ──
-function createDoor() {
-  const doorGroup = new THREE.Group();
-
-  // Door frame
-  const frameMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.7 });
-  // Left frame
-  const lf = new THREE.Mesh(new THREE.BoxGeometry(0.15, ROOM_H, 0.1), frameMat);
-  lf.position.set(-0.55, ROOM_H/2, 0);
-  doorGroup.add(lf);
-  // Right frame
-  const rf = new THREE.Mesh(new THREE.BoxGeometry(0.15, ROOM_H, 0.1), frameMat);
-  rf.position.set(0.55, ROOM_H/2, 0);
-  doorGroup.add(rf);
-  // Top frame
-  const tf = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.12, 0.1), frameMat);
-  tf.position.set(0, ROOM_H - 0.1, 0);
-  doorGroup.add(tf);
-
-  // Door panel
-  const doorCanvas = document.createElement('canvas');
-  doorCanvas.width = 256; doorCanvas.height = 512;
-  const dctx = doorCanvas.getContext('2d');
-  dctx.fillStyle = '#3a2a1a';
-  dctx.fillRect(0, 0, 256, 512);
-  // Door panels
-  dctx.strokeStyle = '#2a1a0a';
-  dctx.lineWidth = 3;
-  dctx.strokeRect(20, 20, 216, 200);
-  dctx.strokeRect(20, 240, 216, 250);
-  // Wood grain
-  for (let i = 0; i < 200; i++) {
-    dctx.strokeStyle = `rgba(${50+Math.random()*30},${30+Math.random()*20},${10+Math.random()*15},0.1)`;
-    dctx.beginPath();
-    dctx.moveTo(Math.random()*256, Math.random()*512);
-    dctx.lineTo(Math.random()*256, Math.random()*512);
-    dctx.stroke();
-  }
-  const doorTex = new THREE.CanvasTexture(doorCanvas);
-  const doorMat = new THREE.MeshStandardMaterial({ map: doorTex, roughness: 0.7 });
-  const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(1, ROOM_H - 0.2, 0.08), doorMat);
-  doorPanel.position.set(0, (ROOM_H - 0.2)/2, 0);
-  doorPanel.castShadow = true;
-  doorGroup.add(doorPanel);
-  roomObjects.doorPanel = doorPanel;
-
-  // Door handle
-  const handleGeo = new THREE.TorusGeometry(0.08, 0.02, 8, 16, Math.PI);
-  const handleMat = new THREE.MeshStandardMaterial({ color: 0xccaa44, metalness: 0.8, roughness: 0.2 });
-  const handle = new THREE.Mesh(handleGeo, handleMat);
-  handle.position.set(0.35, 1.1, 0.06);
-  handle.rotation.z = Math.PI / 2;
-  doorGroup.add(handle);
-
-  // Lock
-  const lockGeo = new THREE.BoxGeometry(0.08, 0.12, 0.06);
-  const lockMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7 });
-  const lock = new THREE.Mesh(lockGeo, lockMat);
-  lock.position.set(0.35, 1.3, 0.06);
-  doorGroup.add(lock);
-
-  // Keyhole
-  const holeGeo = new THREE.CircleGeometry(0.015, 8);
-  const holeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-  const hole = new THREE.Mesh(holeGeo, holeMat);
-  hole.position.set(0.35, 1.3, 0.09);
-  doorGroup.add(hole);
-
-  doorGroup.position.set(2, 0, -ROOM_D/2 + 0.05);
-  scene.add(doorGroup);
-  roomObjects.door = doorGroup;
-
-  // Interactable: door
-  interactables.push({
-    mesh: doorPanel,
-    name: '门',
-    position: new THREE.Vector3(2, 1.5, -ROOM_D/2 + 0.1),
-    radius: 2,
-    action: 'door',
-    prompt: '按 <span class="key">E</span> 尝试开门'
-  });
-}
-
-// ── Create Desk ──
-function createDesk() {
-  const deskGroup = new THREE.Group();
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x5a3a1a, roughness: 0.7 });
-
-  // Desktop
-  const top = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.08, 1.2), woodMat);
-  top.position.y = 0.8;
-  top.castShadow = true;
-  top.receiveShadow = true;
-  deskGroup.add(top);
-
-  // Legs
-  for (let x of [-1.15, 1.15]) {
-    for (let z of [-0.5, 0.5]) {
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.08), woodMat);
-      leg.position.set(x, 0.4, z);
-      leg.castShadow = true;
-      deskGroup.add(leg);
-    }
-  }
-
-  // Drawer
-  const drawerMat = new THREE.MeshStandardMaterial({ color: 0x4a2a0a, roughness: 0.7 });
-  const drawer = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 1), drawerMat);
-  drawer.position.set(0.8, 0.65, 0);
-  drawer.castShadow = true;
-  deskGroup.add(drawer);
-  roomObjects.drawer = drawer;
-
-  // Drawer handle
-  const dhGeo = new THREE.BoxGeometry(0.15, 0.04, 0.04);
-  const dhMat = new THREE.MeshStandardMaterial({ color: 0xccaa44, metalness: 0.7 });
-  const dh = new THREE.Mesh(dhGeo, dhMat);
-  dh.position.set(0.8, 0.65, 0.52);
-  deskGroup.add(dh);
-
-  // Drawer lock
-  const dlock = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.02), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6 }));
-  dlock.position.set(0.8, 0.65, 0.51);
-  deskGroup.add(dlock);
-
-  deskGroup.position.set(-3.5, 0, -2);
-  scene.add(deskGroup);
-
-  // Interactable: drawer
-  interactables.push({
-    mesh: drawer,
-    name: '抽屉',
-    position: new THREE.Vector3(-3.5, 0.8, -1.5),
-    radius: 2,
-    action: 'drawer',
-    prompt: '按 <span class="key">E</span> 打开抽屉'
-  });
-}
-
-// ── Create Bookshelf ──
-function createBookshelf() {
-  const shelfGroup = new THREE.Group();
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4a2a10, roughness: 0.8 });
-
-  // Frame
-  const back = new THREE.Mesh(new THREE.BoxGeometry(3, 3.2, 0.1), woodMat);
-  back.position.y = 1.6;
-  shelfGroup.add(back);
-
-  // Shelves
-  for (let i = 0; i < 4; i++) {
-    const shelf = new THREE.Mesh(new THREE.BoxGeometry(3, 0.06, 0.6), woodMat);
-    shelf.position.y = 0.5 + i * 0.85;
-    shelf.castShadow = true;
-    shelfGroup.add(shelf);
-  }
-
-  // Sides
-  for (let x of [-1.47, 1.47]) {
-    const side = new THREE.Mesh(new THREE.BoxGeometry(0.06, 3.2, 0.6), woodMat);
-    side.position.set(x, 1.6, 0);
-    shelfGroup.add(side);
-  }
-
-  // Books
-  const bookColors = [0x882222, 0x225588, 0x228833, 0x886622, 0x663388, 0x884422, 0x336666];
-  for (let row = 0; row < 3; row++) {
-    let x = -1.3;
-    while (x < 1.3) {
-      const w = 0.1 + Math.random() * 0.15;
-      const h = 0.5 + Math.random() * 0.3;
-      const bookColor = bookColors[Math.floor(Math.random() * bookColors.length)];
-      const bookMat = new THREE.MeshStandardMaterial({ color: bookColor, roughness: 0.8 });
-      const book = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.4), bookMat);
-      book.position.set(x + w/2, 0.5 + row * 0.85 + h/2 + 0.03, 0);
-      book.castShadow = true;
-      shelfGroup.add(book);
-      x += w + 0.02;
-    }
-  }
-
-  shelfGroup.position.set(4.5, 0, -3);
-  shelfGroup.rotation.y = -Math.PI / 2;
-  scene.add(shelfGroup);
-
-  // Special book (contains clue)
-  const specialBook = new THREE.Mesh(
-    new THREE.BoxGeometry(0.15, 0.6, 0.42),
-    new THREE.MeshStandardMaterial({ color: 0xcc2222, roughness: 0.6, emissive: 0x331111, emissiveIntensity: 0.3 })
-  );
-  specialBook.position.set(4.5 - 0.3, 1.18, -3 + 1.2);
-  specialBook.rotation.y = -Math.PI / 2;
-  specialBook.castShadow = true;
-  scene.add(specialBook);
-
-  interactables.push({
-    mesh: specialBook,
-    name: '红色旧书',
-    position: specialBook.position.clone(),
-    radius: 2,
-    action: 'book',
-    prompt: '按 <span class="key">E</span> 查看书本'
-  });
-}
-
-// ── Create Safe ──
-function createSafe() {
-  const safeGroup = new THREE.Group();
-  const safeMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.7, roughness: 0.3 });
-
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.7, 0.6), safeMat);
-  body.position.y = 0.35;
-  body.castShadow = true;
-  safeGroup.add(body);
-
-  // Door
-  const doorMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
-  const safeDoor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.6, 0.05), doorMat);
-  safeDoor.position.set(0, 0.35, 0.33);
-  safeGroup.add(safeDoor);
-
-  // Dial
-  const dialGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.03, 16);
-  const dialMat = new THREE.MeshStandardMaterial({ color: 0xccaa44, metalness: 0.9 });
-  const dial = new THREE.Mesh(dialGeo, dialMat);
-  dial.rotation.x = Math.PI / 2;
-  dial.position.set(0, 0.35, 0.36);
-  safeGroup.add(dial);
-
-  // Handle
-  const handleGeo = new THREE.BoxGeometry(0.2, 0.05, 0.04);
-  const handleMat = new THREE.MeshStandardMaterial({ color: 0xccaa44, metalness: 0.8 });
-  const handle = new THREE.Mesh(handleGeo, handleMat);
-  handle.position.set(0.25, 0.35, 0.36);
-  safeGroup.add(handle);
-
-  safeGroup.position.set(4.8, 0, 2);
-  safeGroup.rotation.y = -Math.PI / 2;
-  scene.add(safeGroup);
-
-  interactables.push({
-    mesh: body,
-    name: '保险箱',
-    position: new THREE.Vector3(4.5, 0.5, 2),
-    radius: 2,
-    action: 'safe',
-    prompt: '按 <span class="key">E</span> 输入密码'
-  });
-}
-
-// ── Create Painting ──
-function createPainting() {
-  // Frame
-  const frameMat = new THREE.MeshStandardMaterial({ color: 0x8a6a2a, metalness: 0.3, roughness: 0.6 });
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.2, 0.08), frameMat);
-  frame.position.set(-ROOM_W/2 + 0.05, 2.2, -1);
-  frame.rotation.y = Math.PI / 2;
-  frame.castShadow = true;
-  scene.add(frame);
-
-  // Canvas (painting)
-  const paintCanvas = document.createElement('canvas');
-  paintCanvas.width = 256; paintCanvas.height = 192;
-  const pctx = paintCanvas.getContext('2d');
-  // Abstract landscape
-  pctx.fillStyle = '#1a2a3a';
-  pctx.fillRect(0, 0, 256, 192);
-  // Mountains
-  pctx.fillStyle = '#2a3a4a';
-  pctx.beginPath(); pctx.moveTo(0, 140); pctx.lineTo(60, 60); pctx.lineTo(120, 120);
-  pctx.lineTo(180, 40); pctx.lineTo(256, 100); pctx.lineTo(256, 192); pctx.lineTo(0, 192); pctx.fill();
-  // Moon
-  pctx.fillStyle = '#ddcc88';
-  pctx.beginPath(); pctx.arc(200, 40, 20, 0, Math.PI * 2); pctx.fill();
-  // Water
-  pctx.fillStyle = 'rgba(40,60,80,0.5)';
-  pctx.fillRect(0, 140, 256, 52);
-
-  const paintTex = new THREE.CanvasTexture(paintCanvas);
-  const paintMat = new THREE.MeshStandardMaterial({ map: paintTex, roughness: 0.6 });
-  const painting = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1), paintMat);
-  painting.position.set(-ROOM_W/2 + 0.1, 2.2, -1);
-  painting.rotation.y = Math.PI / 2;
-  scene.add(painting);
-
-  interactables.push({
-    mesh: painting,
-    name: '油画',
-    position: new THREE.Vector3(-ROOM_W/2 + 0.3, 2.2, -1),
-    radius: 2.5,
-    action: 'painting',
-    prompt: '按 <span class="key">E</span> 检查油画'
-  });
-}
-
-// ── Create Wardrobe ──
-function createWardrobe() {
-  const wGroup = new THREE.Group();
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x3a2510, roughness: 0.8 });
-
-  const body = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 0.8), woodMat);
-  body.position.y = 1.5;
-  body.castShadow = true;
-  wGroup.add(body);
-
-  // Doors
-  for (let x of [-0.48, 0.48]) {
-    const doorMat = new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 0.7 });
-    const door = new THREE.Mesh(new THREE.BoxGeometry(0.94, 2.8, 0.05), doorMat);
-    door.position.set(x, 1.5, 0.43);
-    wGroup.add(door);
-  }
-
-  // Handles
-  for (let x of [-0.15, 0.15]) {
-    const hGeo = new THREE.BoxGeometry(0.04, 0.15, 0.04);
-    const hMat = new THREE.MeshStandardMaterial({ color: 0xccaa44, metalness: 0.7 });
-    const h = new THREE.Mesh(hGeo, hMat);
-    h.position.set(x, 1.3, 0.48);
-    wGroup.add(h);
-  }
-
-  wGroup.position.set(-4.5, 0, 3);
-  wGroup.rotation.y = Math.PI / 2;
-  scene.add(wGroup);
-
-  interactables.push({
-    mesh: body,
-    name: '衣柜',
-    position: new THREE.Vector3(-4.5, 1.5, 3),
-    radius: 2.5,
-    action: 'wardrobe',
-    prompt: '按 <span class="key">E</span> 打开衣柜'
-  });
-}
-
-// ── Create Bed ──
-function createBed() {
-  const bedGroup = new THREE.Group();
-  const frameMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.7 });
-
-  // Frame
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(2, 0.4, 2.5), frameMat);
-  frame.position.y = 0.2;
-  frame.castShadow = true;
-  bedGroup.add(frame);
-
-  // Mattress
-  const mattMat = new THREE.MeshStandardMaterial({ color: 0xdddde8, roughness: 0.9 });
-  const matt = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.25, 2.3), mattMat);
-  matt.position.y = 0.52;
-  matt.castShadow = true;
-  bedGroup.add(matt);
-
-  // Pillow
-  const pillowMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.9 });
-  const pillow = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.12, 0.5), pillowMat);
-  pillow.position.set(0, 0.72, -0.8);
-  pillow.castShadow = true;
-  bedGroup.add(pillow);
-
-  // Blanket
-  const blanketMat = new THREE.MeshStandardMaterial({ color: 0x444466, roughness: 0.85 });
-  const blanket = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.08, 1.5), blanketMat);
-  blanket.position.set(0, 0.68, 0.3);
-  bedGroup.add(blanket);
-
-  // Headboard
-  const hb = new THREE.Mesh(new THREE.BoxGeometry(2, 0.8, 0.1), frameMat);
-  hb.position.set(0, 0.8, -1.25);
-  hb.castShadow = true;
-  bedGroup.add(hb);
-
-  bedGroup.position.set(3, 0, 3.5);
-  bedGroup.rotation.y = Math.PI;
-  scene.add(bedGroup);
-}
-
-// ── Create Clock ──
-function createClock() {
-  const clockGroup = new THREE.Group();
-
-  // Body
-  const bodyGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.06, 16);
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4, metalness: 0.5 });
-  const body = new THREE.Mesh(bodyGeo, bodyMat);
-  body.rotation.x = Math.PI / 2;
-  clockGroup.add(body);
-
-  // Face
-  const faceCanvas = document.createElement('canvas');
-  faceCanvas.width = 128; faceCanvas.height = 128;
-  const cctx = faceCanvas.getContext('2d');
-  cctx.fillStyle = '#fffff0';
-  cctx.beginPath(); cctx.arc(64, 64, 60, 0, Math.PI * 2); cctx.fill();
-  // Numbers
-  cctx.fillStyle = '#333';
-  cctx.font = 'bold 14px serif';
-  cctx.textAlign = 'center'; cctx.textBaseline = 'middle';
-  for (let i = 1; i <= 12; i++) {
-    const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
-    cctx.fillText(i.toString(), 64 + Math.cos(a) * 48, 64 + Math.sin(a) * 48);
-  }
-  // Hands (showing 3:15 - hint for code)
-  cctx.strokeStyle = '#333'; cctx.lineWidth = 3; cctx.lineCap = 'round';
-  // Hour hand (3)
-  cctx.beginPath(); cctx.moveTo(64, 64); cctx.lineTo(64 + 30, 64); cctx.stroke();
-  // Minute hand (15)
-  cctx.lineWidth = 2;
-  cctx.beginPath(); cctx.moveTo(64, 64); cctx.lineTo(64, 64 - 40); cctx.stroke();
-
-  const faceTex = new THREE.CanvasTexture(faceCanvas);
-  const faceMat = new THREE.MeshStandardMaterial({ map: faceTex });
-  const face = new THREE.Mesh(new THREE.CircleGeometry(0.23, 16), faceMat);
-  face.position.z = 0.035;
-  clockGroup.add(face);
-
-  // Pendulum
-  const pendGeo = new THREE.CylinderGeometry(0.01, 0.01, 0.4, 4);
-  const pendMat = new THREE.MeshStandardMaterial({ color: 0xccaa44, metalness: 0.8 });
-  const pend = new THREE.Mesh(pendGeo, pendMat);
-  pend.position.y = -0.3;
-  clockGroup.add(pend);
-
-  const bobGeo = new THREE.SphereGeometry(0.04, 8, 8);
-  const bob = new THREE.Mesh(bobGeo, pendMat);
-  bob.position.y = -0.5;
-  clockGroup.add(bob);
-  roomObjects.pendulum = pend;
-  roomObjects.pendulumBob = bob;
-
-  clockGroup.position.set(0, 2.5, -ROOM_D/2 + 0.1);
-  scene.add(clockGroup);
-
-  interactables.push({
-    mesh: body,
-    name: '挂钟',
-    position: new THREE.Vector3(0, 2.5, -ROOM_D/2 + 0.3),
-    radius: 2.5,
-    action: 'clock',
-    prompt: '按 <span class="key">E</span> 检查挂钟'
-  });
-}
-
-// ── Create Desk Lamp ──
-function createDeskLamp() {
-  const lampGroup = new THREE.Group();
-  const metalMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7, roughness: 0.3 });
-
-  // Base
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 0.05, 8), metalMat);
-  base.position.y = 0.025;
-  lampGroup.add(base);
-
-  // Arm
-  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.6, 6), metalMat);
-  arm.position.y = 0.35;
-  arm.rotation.z = 0.3;
-  lampGroup.add(arm);
-
-  // Shade
-  const shadeGeo = new THREE.ConeGeometry(0.15, 0.12, 8, 1, true);
-  const shadeMat = new THREE.MeshStandardMaterial({ color: 0x225522, roughness: 0.6, side: THREE.DoubleSide });
-  const shade = new THREE.Mesh(shadeGeo, shadeMat);
-  shade.position.set(0.1, 0.65, 0);
-  lampGroup.add(shade);
-
-  // Bulb
-  const bulbGeo = new THREE.SphereGeometry(0.04, 6, 6);
-  const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffeedd, emissive: 0xffcc66, emissiveIntensity: 0 });
-  const bulb = new THREE.Mesh(bulbGeo, bulbMat);
-  bulb.position.set(0.1, 0.6, 0);
-  lampGroup.add(bulb);
-  roomObjects.lampBulb = bulb;
-
-  lampGroup.position.set(-3.5, 0.84, -2.3);
-  scene.add(lampGroup);
-
-  interactables.push({
-    mesh: base,
-    name: '台灯',
-    position: new THREE.Vector3(-3.5, 1.2, -2.3),
-    radius: 1.8,
-    action: 'lamp',
-    prompt: '按 <span class="key">E</span> 开关台灯'
-  });
-}
-
-// ── Create Note (hidden under painting) ──
-function createHiddenNote() {
-  // Will be revealed when painting is moved
-  roomObjects.hiddenNote = null;
-}
-
-// ── Create Small Objects ──
-function createDetails() {
-  // Mug on desk
-  const mugGeo = new THREE.CylinderGeometry(0.06, 0.05, 0.12, 8);
-  const mugMat = new THREE.MeshStandardMaterial({ color: 0x884422, roughness: 0.7 });
-  const mug = new THREE.Mesh(mugGeo, mugMat);
-  mug.position.set(-3, 0.9, -1.8);
-  mug.castShadow = true;
-  scene.add(mug);
-
-  // Paper on desk
-  const paperGeo = new THREE.PlaneGeometry(0.3, 0.4);
-  const paperMat = new THREE.MeshStandardMaterial({ color: 0xeeeedd, roughness: 0.9 });
-  const paper = new THREE.Mesh(paperGeo, paperMat);
-  paper.rotation.x = -Math.PI / 2;
-  paper.position.set(-4, 0.85, -2.5);
-  scene.add(paper);
-
-  // Rug
-  const rugGeo = new THREE.PlaneGeometry(3, 2);
-  const rugCanvas = document.createElement('canvas');
-  rugCanvas.width = 128; rugCanvas.height = 86;
-  const rctx = rugCanvas.getContext('2d');
-  rctx.fillStyle = '#5a2a2a';
-  rctx.fillRect(0, 0, 128, 86);
-  rctx.strokeStyle = '#8a4a2a';
-  rctx.lineWidth = 4;
-  rctx.strokeRect(8, 8, 112, 70);
-  rctx.strokeStyle = '#aa6a3a';
-  rctx.lineWidth = 2;
-  rctx.strokeRect(16, 16, 96, 54);
-  // Pattern
-  for (let x = 24; x < 120; x += 16) {
-    for (let y = 24; y < 75; y += 16) {
-      rctx.fillStyle = '#7a3a2a';
-      rctx.fillRect(x, y, 8, 8);
-    }
-  }
-  const rugTex = new THREE.CanvasTexture(rugCanvas);
-  const rugMat = new THREE.MeshStandardMaterial({ map: rugTex, roughness: 0.95 });
-  const rug = new THREE.Mesh(rugGeo, rugMat);
-  rug.rotation.x = -Math.PI / 2;
-  rug.position.set(0, 0.01, 1);
-  scene.add(rug);
-
-  // Window (bricked up)
-  const windowGroup = new THREE.Group();
-  const windowFrame = new THREE.Mesh(
-    new THREE.BoxGeometry(1.5, 1.2, 0.1),
-    new THREE.MeshStandardMaterial({ color: 0x4a3a2a, roughness: 0.7 })
-  );
-  windowGroup.add(windowFrame);
-
-  // Bricks inside window
-  const brickMat = new THREE.MeshStandardMaterial({ color: 0x6a4a3a, roughness: 0.9 });
-  for (let by = -0.4; by < 0.5; by += 0.12) {
-    for (let bx = -0.55; bx < 0.6; bx += 0.15) {
-      const brick = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.1, 0.08), brickMat);
-      brick.position.set(bx + (Math.floor(by*10)%2)*0.075, by, 0);
-      windowGroup.add(brick);
-    }
-  }
-
-  windowGroup.position.set(0, 2.2, ROOM_D/2 - 0.05);
-  windowGroup.rotation.y = Math.PI;
-  scene.add(windowGroup);
-}
-
-// ── Inventory UI ──
-function updateInventoryUI() {
-  const container = document.getElementById('inventory');
-  container.innerHTML = '';
-  for (let i = 0; i < 6; i++) {
-    const slot = document.createElement('div');
-    slot.className = 'inv-slot' + (i === selectedSlot ? ' selected' : '');
-    if (inventory[i]) {
-      slot.textContent = inventory[i].icon;
-      const name = document.createElement('div');
-      name.className = 'inv-name';
-      name.textContent = inventory[i].name;
-      slot.appendChild(name);
-    }
-    slot.onclick = () => {
-      selectedSlot = selectedSlot === i ? -1 : i;
-      updateInventoryUI();
-    };
-    container.appendChild(slot);
-  }
-}
-
-function addItem(icon, name, id) {
-  if (inventory.length >= 6) return false;
-  inventory.push({ icon, name, id });
-  updateInventoryUI();
-  playSuccess();
-  showMessage('获得物品', `${icon} ${name}`);
-  return true;
-}
-
-function hasItem(id) {
-  return inventory.some(i => i.id === id);
-}
-
-function removeItem(id) {
-  inventory = inventory.filter(i => i.id !== id);
-  updateInventoryUI();
-}
-
-// ── Message System ──
-function showMessage(title, body) {
-  document.getElementById('msg-title').textContent = title;
-  document.getElementById('msg-body').innerHTML = body;
-  document.getElementById('message').classList.add('show');
-  playClick();
-}
-
-function closeMessage() {
-  document.getElementById('message').classList.remove('show');
-}
-
-// ── Code Input ──
-function openCodeInput(title, callback) {
-  document.getElementById('code-title').textContent = title;
-  document.getElementById('code-field').value = '';
-  document.getElementById('code-input').classList.add('show');
-  codeCallback = callback;
-  document.getElementById('code-field').focus();
-}
-
-function closeCodeInput() {
-  document.getElementById('code-input').classList.remove('show');
-  codeCallback = null;
-}
-
-function submitCode() {
-  const code = document.getElementById('code-field').value;
-  if (codeCallback) codeCallback(code);
-  closeCodeInput();
-}
-
-// ── Notes System ──
-function addNote(text) {
-  notes.push(text);
-  const notebook = document.getElementById('notebook');
-  const note = document.createElement('div');
-  note.className = 'note';
-  note.textContent = '• ' + text;
-  notebook.appendChild(note);
-}
-
-// ── Hint System ──
-const hints = [
-  '试试看看书架上的书……那本红色的。',
-  '书里提到了"三点十五分"，看看挂钟。',
-  '挂钟指向 3:15，这可能是一个密码。',
-  '用密码打开保险箱，里面有重要的东西。',
-  '台灯下面好像有什么……',
-  '检查一下抽屉，也许需要钥匙。',
-  '油画后面可能藏着什么。',
-  '找到所有线索后，试试打开门。',
+// ── Loading Tips ──
+const tips = [
+  '提示：仔细观察房间里的每一个物体',
+  '提示：书架上的那本红色书有点不同寻常',
+  '提示：时间可能是解开谜题的关键',
+  '提示：有些东西藏在你意想不到的地方',
+  '提示：灯光可以照亮隐藏的秘密',
+  '提示：不要忽视任何一张纸条',
 ];
+document.getElementById('loading-tip').textContent = tips[Math.floor(Math.random() * tips.length)];
 
-function showHint() {
-  showMessage('💡 提示', hints[Math.min(hintIndex, hints.length - 1)]);
-  hintIndex++;
+// ── Settings ──
+function toggleSetting(el) {
+  el.classList.toggle('active');
+}
+function showSettings() {
+  document.getElementById('settings-panel').classList.add('show');
+}
+function hideSettings() {
+  document.getElementById('settings-panel').classList.remove('show');
+}
+function showCredits() {
+  document.getElementById('credits-panel').classList.add('show');
+}
+function hideCredits() {
+  document.getElementById('credits-panel').classList.remove('show');
 }
 
-// ── Interaction System ──
-function updateInteraction() {
-  const dir = new THREE.Vector3();
-  camera.getWorldDirection(dir);
-  const raycaster = new THREE.Raycaster(camera.position.clone(), dir, 0, 5);
-
-  canInteract = false;
-  currentInteractable = null;
-
-  let closest = null, closestDist = Infinity;
-
-  interactables.forEach(obj => {
-    const dist = camera.position.distanceTo(obj.position);
-    if (dist < obj.radius) {
-      // Check if looking at it
-      const toObj = new THREE.Vector3().subVectors(obj.position, camera.position).normalize();
-      const dot = dir.dot(toObj);
-      if (dot > 0.5 && dist < closestDist) {
-        closestDist = dist;
-        closest = obj;
-      }
-    }
-  });
-
-  const prompt = document.getElementById('interaction-prompt');
-  if (closest) {
-    canInteract = true;
-    currentInteractable = closest;
-    prompt.innerHTML = closest.prompt;
-    prompt.classList.add('show');
-
-    // Highlight
-    if (closest.mesh.material && closest.mesh.material.emissive) {
-      closest.mesh.material.emissiveIntensity = 0.3 + Math.sin(clock.getElapsedTime() * 3) * 0.1;
-    }
-  } else {
-    prompt.classList.remove('show');
-    // Reset all emissive
-    interactables.forEach(obj => {
-      if (obj.mesh.material && obj.mesh.material.emissive && obj.action !== 'lamp') {
-        obj.mesh.material.emissiveIntensity = 0;
-      }
-    });
-  }
-}
-
-function tryInteract() {
-  if (!currentInteractable) return;
-
-  const obj = currentInteractable;
-
-  switch (obj.action) {
-    case 'door':
-      if (puzzleState.doorUnlocked) {
-        // Win!
-        gameWon = true;
-        document.getElementById('win-screen').classList.add('show');
-        document.getElementById('win-time').textContent = `用时: ${document.getElementById('timer').textContent}`;
-        document.exitPointerLock();
-        playSuccess();
-      } else if (hasItem('master_key')) {
-        puzzleState.doorUnlocked = true;
-        removeItem('master_key');
-        playDoor();
-        showMessage('🔓 门开了！', '你用万能钥匙打开了门锁！<br>快出去！');
-        addNote('门已解锁！');
-      } else {
-        showMessage('🔒 门锁住了', '需要找到钥匙才能打开这扇门。');
-        playError();
-      }
-      break;
-
-    case 'book':
-      if (!puzzleState.hasBookClue) {
-        puzzleState.hasBookClue = true;
-        showMessage('📖 红色旧书', 
-          '翻开书页，里面夹着一张纸条：<br><br>' +
-          '<i>"时间是答案。看看墙上的钟。"</i><br><br>' +
-          '<small>（提示已记录到笔记本）</small>'
-        );
-        addNote('书中的纸条："时间是答案"');
-        addNote('查看挂钟');
-        playSuccess();
-      } else {
-        showMessage('📖 红色旧书', '你已经看过了。纸条上写着："时间是答案。看看墙上的钟。"');
-      }
-      break;
-
-    case 'clock':
-      showMessage('🕐 挂钟', 
-        '一座老式挂钟，指针停在了 <b>3:15</b>。<br><br>' +
-        '钟摆还在轻轻摆动……<br><br>' +
-        '<small>（时间似乎是某种密码？）</small>'
-      );
-      addNote('挂钟停在 3:15');
-      playClick();
-      break;
-
-    case 'safe':
-      if (puzzleState.safeOpened) {
-        showMessage('🔓 保险箱', '保险箱已经打开了，里面是空的。');
-      } else {
-        openCodeInput('输入4位密码', (code) => {
-          if (code === '3115') {
-            puzzleState.safeOpened = true;
-            playUnlock();
-            showMessage('🔓 保险箱打开了！', 
-              '密码正确！保险箱里有一把<b>万能钥匙</b>和一张<b>纸条</b>。'
-            );
-            addItem('🔑', '万能钥匙', 'master_key');
-            addNote('保险箱密码：3115');
-            addNote('获得万能钥匙！');
-          } else {
-            playError();
-            showMessage('❌ 密码错误', '密码不对，再想想……');
-          }
-        });
-      }
-      break;
-
-    case 'drawer':
-      if (puzzleState.drawerUnlocked) {
-        showMessage('📦 抽屉', '抽屉里是空的。');
-      } else if (hasItem('drawer_key')) {
-        puzzleState.drawerUnlocked = true;
-        removeItem('drawer_key');
-        playUnlock();
-        showMessage('🔓 抽屉打开了！', 
-          '抽屉里有一张<b>旧照片</b>，背面写着：<br><br>' +
-          '<i>"保险箱的密码就藏在你能看到时间的地方。"</i>'
-        );
-        addNote('照片背面："密码藏在能看到时间的地方"');
-      } else {
-        showMessage('🔒 抽屉锁住了', '需要一把小钥匙。也许在衣柜里？');
-        playError();
-      }
-      break;
-
-    case 'painting':
-      if (!puzzleState.paintingMoved) {
-        puzzleState.paintingMoved = true;
-        showMessage('🖼️ 油画', 
-          '你移动了油画，发现墙上有一个<b>暗格</b>！<br><br>' +
-          '里面有一把<b>抽屉钥匙</b>。'
-        );
-        addItem('🗝️', '抽屉钥匙', 'drawer_key');
-        addNote('油画后面有暗格，找到抽屉钥匙');
-        playSuccess();
-      } else {
-        showMessage('🖼️ 油画', '油画已经移开了，墙上的暗格是空的。');
-      }
-      break;
-
-    case 'wardrobe':
-      if (!puzzleState.wardrobeOpened) {
-        puzzleState.wardrobeOpened = true;
-        showMessage('🚪 衣柜', 
-          '打开衣柜，里面挂着几件旧衣服。<br><br>' +
-          '在衣柜深处的架子上，你发现了一张<b>泛黄的纸条</b>：<br><br>' +
-          '<i>"灯下有秘密。"</i>'
-        );
-        addNote('衣柜里的纸条："灯下有秘密"');
-        playSuccess();
-      } else {
-        showMessage('🚪 衣柜', '衣柜里没有更多东西了。');
-      }
-      break;
-
-    case 'lamp':
-      puzzleState.lampOn = !puzzleState.lampOn;
-      if (puzzleState.lampOn) {
-        roomObjects.deskLamp.intensity = 1.5;
-        roomObjects.lampBulb.material.emissiveIntensity = 2;
-        playClick();
-        if (!puzzleState.hiddenNoteFound) {
-          // Show hidden note under lamp
-          setTimeout(() => {
-            puzzleState.hiddenNoteFound = true;
-            showMessage('💡 台灯亮了！', 
-              '灯光照亮了桌面，你看到灯座下面压着一张<b>小纸条</b>：<br><br>' +
-              '<i>"门的密码是万能钥匙。"</i>'
-            );
-            addNote('灯座下的纸条："门的密码是万能钥匙"');
-            playSuccess();
-          }, 500);
-        }
-      } else {
-        roomObjects.deskLamp.intensity = 0;
-        roomObjects.lampBulb.material.emissiveIntensity = 0;
-        playClick();
-      }
-      break;
-  }
-}
-
-// ── Player Movement ──
-function updatePlayer(dt) {
-  if (!gameStarted || gameWon) return;
-
-  const speed = isSprinting ? SPRINT_SPEED : MOVE_SPEED;
-  const direction = new THREE.Vector3();
-
-  if (moveForward) direction.z -= 1;
-  if (moveBack) direction.z += 1;
-  if (moveLeft) direction.x -= 1;
-  if (moveRight) direction.x += 1;
-
-  if (direction.length() > 0) {
-    direction.normalize();
-    direction.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-    velocity.add(direction.multiplyScalar(speed * dt));
-  }
-
-  velocity.multiplyScalar(0.85); // friction
-
-  // Apply velocity
-  const newPos = camera.position.clone().add(velocity.clone().multiplyScalar(dt));
-
-  // Wall collision
-  const margin = 0.3;
-  newPos.x = Math.max(-ROOM_W/2 + margin, Math.min(ROOM_W/2 - margin, newPos.x));
-  newPos.z = Math.max(-ROOM_D/2 + margin, Math.min(ROOM_D/2 - margin, newPos.z));
-  newPos.y = playerHeight;
-
-  camera.position.copy(newPos);
-
-  // Camera rotation
-  const euler = new THREE.Euler(pitch, yaw, 0, 'YXZ');
-  camera.quaternion.setFromEuler(euler);
-
-  // Update flashlight
-  flashlight.position.copy(camera.position);
-  const flashDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-  flashlightTarget.position.copy(camera.position).add(flashDir.multiplyScalar(10));
-
-  // Footstep sounds
-  if (direction.length() > 0 && Math.random() > 0.95) {
-    playSound(80 + Math.random() * 40, 0.05, 'triangle', 0.02);
-  }
-}
-
-// ── Ceiling Light Flicker ──
-let flickerTimer = 0;
-function updateLightFlicker(dt) {
-  flickerTimer += dt;
-  if (flickerTimer > 3 + Math.random() * 5) {
-    flickerTimer = 0;
-    // Flicker
-    const flicker = () => {
-      roomObjects.ceilingLight.intensity = Math.random() * 0.5;
-      roomObjects.bulb.material.emissiveIntensity = Math.random() * 0.3;
-      setTimeout(() => {
-        roomObjects.ceilingLight.intensity = 0.8;
-        roomObjects.bulb.material.emissiveIntensity = 0.5;
-      }, 50 + Math.random() * 100);
-    };
-    flicker();
-    setTimeout(flicker, 200);
-    setTimeout(flicker, 400);
-  }
-
-  // Ambient flicker
-  ambientLight.intensity = 0.12 + Math.sin(flickerTimer * 0.5) * 0.03;
-}
-
-// ── Timer ──
-function updateTimer() {
-  if (!gameStarted || gameWon) return;
-  elapsedTime += 1/60;
-  const min = Math.floor(elapsedTime / 60);
-  const sec = Math.floor(elapsedTime % 60);
-  document.getElementById('timer').textContent = 
-    `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
-}
-
-// ── Pendulum Animation ──
-function updatePendulum(time) {
-  if (roomObjects.pendulum) {
-    roomObjects.pendulum.rotation.z = Math.sin(time * 2) * 0.3;
-    roomObjects.pendulumBob.position.x = Math.sin(time * 2) * 0.15;
-  }
-}
-
-// ── Start Game ──
+// ── Start Game with Loading ──
 function startGame() {
-  document.getElementById('start-screen').classList.add('hidden');
-  document.getElementById('crosshair').style.display = 'block';
-  document.getElementById('inventory').style.display = 'flex';
-  document.getElementById('notebook').style.display = 'block';
-  document.getElementById('timer').style.display = 'block';
-  document.getElementById('hint-btn').style.display = 'flex';
-
-  updateInventoryUI();
-  gameStarted = true;
-
-  renderer.domElement.requestPointerLock();
-
-  // Start flickering immediately
-  showMessage('🔐 密室逃脱', 
-    '你在一间陌生的房间里醒来。<br>' +
-    '门被锁住了，你需要找到出路。<br><br>' +
-    '<b>操作说明：</b><br>' +
-    'WASD 移动 | 鼠标 环顾 | E 互动<br>' +
-    '按住 Shift 冲刺 | 💡 提示按钮<br><br>' +
-    '仔细观察房间里的每一个细节……'
-  );
+  document.getElementById('main-menu').style.display = 'none';
+  const loading = document.getElementById('loading-screen');
+  loading.classList.add('show');
+  
+  const bar = document.getElementById('loading-bar');
+  const text = document.getElementById('loading-text');
+  
+  const steps = [
+    { pct: 15, text: 'LOADING TEXTURES...' },
+    { pct: 30, text: 'BUILDING ENVIRONMENT...' },
+    { pct: 50, text: 'GENERATING FURNITURE...' },
+    { pct: 65, text: 'SETTING UP LIGHTING...' },
+    { pct: 80, text: 'INITIALIZING AUDIO...' },
+    { pct: 95, text: 'PREPARING PUZZLES...' },
+    { pct: 100, text: 'READY' },
+  ];
+  
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i < steps.length) {
+      bar.style.width = steps[i].pct + '%';
+      text.textContent = steps[i].text;
+      i++;
+    } else {
+      clearInterval(interval);
+      setTimeout(() => {
+        window.location.href = 'game.html';
+      }, 600);
+    }
+  }, 350);
 }
-
-// ── Init ──
-function init() {
-  initScene();
-  createRoom();
-  createDoor();
-  createDesk();
-  createBookshelf();
-  createSafe();
-  createPainting();
-  createWardrobe();
-  createBed();
-  createClock();
-  createDeskLamp();
-  createDetails();
-  createHiddenNote();
-  initPointerLock();
-}
-
-// ── Main Loop ──
-function animate() {
-  requestAnimationFrame(animate);
-
-  const dt = Math.min(clock.getDelta(), 0.05);
-
-  if (gameStarted && !gameWon) {
-    updatePlayer(dt);
-    updateInteraction();
-    updateLightFlicker(dt);
-    updateTimer();
-    updatePendulum(clock.getElapsedTime());
-  }
-
-  renderer.render(scene, camera);
-}
-
-init();
-animate();
 </script>
 </body>
 </html>

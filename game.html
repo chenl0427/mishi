@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔐 密室逃脱 - ESCAPE ROOM</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#000;font-family:'Segoe UI','PingFang SC',sans-serif;cursor:none}
+canvas{display:block}
+
+#crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none}
+#crosshair::before,#crosshair::after{content:'';position:absolute;background:rgba(255,255,255,0.6)}
+#crosshair::before{width:18px;height:1.5px;top:-0.75px;left:-9px}
+#crosshair::after{width:1.5px;height:18px;top:-9px;left:-0.75px}
+#crosshair-dot{position:absolute;top:-2px;left:-2px;width:4px;height:4px;border-radius:50%;background:rgba(255,80,80,0.7)}
+
+#interaction-prompt{
+  position:fixed;bottom:35%;left:50%;transform:translateX(-50%);
+  z-index:15;padding:10px 24px;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.12);border-radius:10px;
+  color:#fff;font-size:14px;pointer-events:none;
+  opacity:0;transition:opacity 0.2s;
+}
+#interaction-prompt.show{opacity:1}
+#interaction-prompt .key{
+  display:inline-block;padding:2px 8px;margin:0 4px;
+  background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);
+  border-radius:4px;font-family:monospace;font-size:12px;
+}
+
+#inventory{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:15;display:flex;gap:8px;pointer-events:all}
+.inv-slot{
+  width:64px;height:64px;
+  background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
+  border:2px solid rgba(255,255,255,0.08);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;cursor:pointer;transition:all 0.2s;position:relative;
+}
+.inv-slot:hover{border-color:rgba(255,255,255,0.3);transform:translateY(-3px)}
+.inv-slot.selected{border-color:#ff6644;box-shadow:0 0 15px rgba(255,100,50,0.3)}
+.inv-slot .inv-name{
+  position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);
+  font-size:9px;color:rgba(255,255,255,0.4);white-space:nowrap;
+}
+
+#message{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:50;max-width:500px;width:90%;padding:24px 32px;
+  background:rgba(0,0,0,0.85);backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.12);border-radius:16px;
+  color:#fff;font-size:15px;line-height:1.8;
+  opacity:0;transition:opacity 0.3s;pointer-events:none;text-align:center;
+}
+#message.show{opacity:1;pointer-events:all}
+#message .msg-title{font-size:20px;font-weight:700;margin-bottom:12px;color:#ff8866}
+#message .msg-close{
+  margin-top:16px;padding:8px 24px;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;color:#fff;cursor:pointer;font-size:13px;
+}
+#message .msg-close:hover{background:rgba(255,255,255,0.15)}
+
+#code-input{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:55;padding:24px 32px;
+  background:rgba(0,0,0,0.9);backdrop-filter:blur(16px);
+  border:1px solid rgba(255,100,50,0.25);border-radius:16px;
+  color:#fff;text-align:center;
+  opacity:0;transition:opacity 0.3s;pointer-events:none;
+}
+#code-input.show{opacity:1;pointer-events:all}
+#code-input h3{margin-bottom:16px;color:#ff8866}
+#code-input input{
+  width:200px;padding:10px;font-size:24px;text-align:center;
+  background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.15);
+  border-radius:8px;color:#fff;letter-spacing:8px;font-family:monospace;
+  outline:none;
+}
+#code-input input:focus{border-color:rgba(255,100,50,0.5)}
+#code-input .code-btns{margin-top:16px;display:flex;gap:10px;justify-content:center}
+#code-input .code-btn{padding:8px 20px;border:none;border-radius:8px;cursor:pointer;font-size:13px}
+#code-input .code-ok{background:rgba(60,160,60,0.8);color:#fff}
+#code-input .code-cancel{background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15)}
+
+#notebook{
+  position:fixed;top:20px;right:20px;z-index:15;
+  width:200px;max-height:300px;overflow-y:auto;
+  padding:12px 16px;
+  background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.08);border-radius:10px;
+  color:rgba(255,255,255,0.6);font-size:12px;line-height:1.6;pointer-events:none;
+}
+#notebook h4{color:#ff8866;margin-bottom:8px;font-size:13px}
+#notebook .note{margin:4px 0;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+
+#timer{
+  position:fixed;top:20px;left:20px;z-index:15;
+  font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  color:rgba(255,255,255,0.5);text-shadow:0 2px 8px rgba(0,0,0,0.5);
+}
+
+#hint-btn{
+  position:fixed;bottom:100px;right:20px;z-index:15;
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(255,200,50,0.15);border:1px solid rgba(255,200,50,0.3);
+  color:#ffcc33;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+#hint-btn:hover{background:rgba(255,200,50,0.25)}
+
+#pause-menu{
+  position:fixed;inset:0;z-index:80;
+  background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+}
+#pause-menu.show{display:flex}
+#pause-menu h2{font-size:36px;margin-bottom:30px;color:rgba(255,255,255,0.8)}
+.pause-btn{
+  padding:14px 40px;margin:6px;width:220px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;color:rgba(255,255,255,0.7);font-size:15px;
+  cursor:pointer;font-family:inherit;transition:all 0.2s;
+}
+.pause-btn:hover{background:rgba(255,100,50,0.1);border-color:rgba(255,100,50,0.3);color:#fff}
+
+#win-screen{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,0.9);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+}
+#win-screen.show{display:flex}
+#win-screen h1{font-size:64px;color:#44ff44;margin-bottom:10px}
+#win-screen .win-time{font-size:24px;color:rgba(255,255,255,0.7);margin-bottom:8px}
+#win-screen .win-hint-count{font-size:16px;color:rgba(255,255,255,0.4);margin-bottom:30px}
+.restart-btn{
+  padding:14px 50px;font-size:18px;font-weight:700;
+  background:linear-gradient(135deg,#44aa44,#66cc66);
+  border:none;border-radius:50px;color:#fff;cursor:pointer;
+}
+
+#controls-hint{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+  z-index:15;font-size:11px;color:rgba(255,255,255,0.2);
+  text-align:center;pointer-events:none;
+}
+</style>
+</head>
+<body>
+
+<div id="crosshair" style="display:none"><div id="crosshair-dot"></div></div>
+<div id="interaction-prompt"></div>
+<div id="inventory" style="display:none"></div>
+<div id="notebook" style="display:none"><h4>📝 笔记</h4></div>
+<div id="timer" style="display:none">00:00</div>
+<div id="hint-btn" style="display:none" onclick="showHint()">💡</div>
+<div id="controls-hint" style="display:none">WASD 移动 | 鼠标环顾 | E 互动 | ESC 暂停</div>
+
+<div id="message">
+  <div class="msg-title" id="msg-title"></div>
+  <div id="msg-body"></div>
+  <button class="msg-close" onclick="closeMessage()">确定</button>
+</div>
+
+<div id="code-input">
+  <h3 id="code-title">输入密码</h3>
+  <input type="text" id="code-field" maxlength="4" placeholder="----">
+  <div class="code-btns">
+    <button class="code-btn code-ok" onclick="submitCode()">确认</button>
+    <button class="code-btn code-cancel" onclick="closeCodeInput()">取消</button>
+  </div>
+</div>
+
+<div id="pause-menu">
+  <h2>⏸ 暂停</h2>
+  <button class="pause-btn" onclick="resumeGame()">继续游戏</button>
+  <button class="pause-btn" onclick="location.reload()">返回主菜单</button>
+</div>
+
+<div id="win-screen">
+  <h1>🎉 成功逃脱！</h1>
+  <div class="win-time" id="win-time">用时: 00:00</div>
+  <div class="win-hint-count" id="win-hints">使用提示: 0 次</div>
+  <button class="restart-btn" onclick="location.href='index.html'">返回主菜单</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+// 🔐 密室逃脱 - First Person Escape Room
+// ═══════════════════════════════════════════════
+
+let scene, camera, renderer, clock;
+let gameStarted = false, gameWon = false, gamePaused = false;
+let yaw = 0, pitch = 0;
+let velocity = new THREE.Vector3();
+let moveForward = false, moveBack = false, moveLeft = false, moveRight = false;
+let isSprinting = false;
+let playerHeight = 1.7;
+let canInteract = false, currentInteractable = null;
+let inventory = [], selectedSlot = -1;
+let notes = [];
+let codeCallback = null;
+let elapsedTime = 0, hintCount = 0;
+let flashlight, flashlightTarget;
+let ambientLight;
+let hintIndex = 0;
+
+const ROOM_W = 12, ROOM_H = 3.5, ROOM_D = 10;
+const MOVE_SPEED = 4, SPRINT_SPEED = 7;
+
+// ── Puzzle State ──
+const puzzleState = {
+  drawerUnlocked: false, safeOpened: false, hasBookClue: false,
+  hasDrawerKey: false, doorUnlocked: false, lampOn: false,
+  paintingMoved: false, hiddenNoteFound: false, wardrobeOpened: false,
+};
+
+// ── Room Objects ──
+let interactables = [];
+let roomObjects = {};
+
+// ── Audio ──
+let audioCtx, bgMusicPlaying = false, bgMusicOscs = [], bgMusicGain;
+function initAudio() {
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+}
+function playSound(freq, duration, type = 'sine', vol = 0.1) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type; osc.frequency.value = freq;
+  gain.gain.value = vol;
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + duration);
+}
+function playClick() { playSound(800, 0.08, 'sine', 0.04); }
+function playSuccess() { playSound(523,0.12); setTimeout(()=>playSound(659,0.12),120); setTimeout(()=>playSound(784,0.25),240); }
+function playError() { playSound(200, 0.25, 'sawtooth', 0.04); }
+function playUnlock() { playSound(440,0.08); setTimeout(()=>playSound(554,0.08),80); setTimeout(()=>playSound(659,0.15),160); }
+function playDoor() { playSound(100, 0.4, 'square', 0.02); }
+
+function startBGMusic() {
+  if (!audioCtx || bgMusicPlaying) return;
+  bgMusicPlaying = true;
+  bgMusicGain = audioCtx.createGain();
+  bgMusicGain.gain.value = 0.015;
+  bgMusicGain.connect(audioCtx.destination);
+
+  // Dark ambient drone
+  const notes = [55, 73.4, 82.4, 110]; // A1, D2, E2, A2
+  notes.forEach(f => {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = f;
+    const lfo = audioCtx.createOscillator();
+    lfo.frequency.value = 0.1 + Math.random() * 0.2;
+    const lfoGain = audioCtx.createGain();
+    lfoGain.gain.value = 2;
+    lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
+    osc.connect(bgMusicGain);
+    osc.start(); lfo.start();
+    bgMusicOscs.push(osc, lfo);
+  });
+}
+
+// ── Pointer Lock ──
+function initPointerLock() {
+  const canvas = renderer.domElement;
+  canvas.addEventListener('click', () => {
+    if (!gameStarted || gameWon || gamePaused) return;
+    canvas.requestPointerLock();
+  });
+  document.addEventListener('pointerlockchange', () => {
+    if (document.pointerLockElement === canvas) {
+      document.addEventListener('mousemove', onMouseMove);
+    } else {
+      document.removeEventListener('mousemove', onMouseMove);
+    }
+  });
+}
+function onMouseMove(e) {
+  if (gamePaused) return;
+  yaw -= e.movementX * 0.002;
+  pitch -= e.movementY * 0.002;
+  pitch = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, pitch));
+}
+
+// ── Input ──
+window.addEventListener('keydown', e => {
+  if (e.code === 'KeyW') moveForward = true;
+  if (e.code === 'KeyS') moveBack = true;
+  if (e.code === 'KeyA') moveLeft = true;
+  if (e.code === 'KeyD') moveRight = true;
+  if (e.code === 'ShiftLeft') isSprinting = true;
+  if (e.code === 'KeyE') tryInteract();
+  if (e.code === 'Escape') {
+    e.preventDefault();
+    if (document.getElementById('message').classList.contains('show')) closeMessage();
+    else if (document.getElementById('code-input').classList.contains('show')) closeCodeInput();
+    else togglePause();
+  }
+});
+window.addEventListener('keyup', e => {
+  if (e.code === 'KeyW') moveForward = false;
+  if (e.code === 'KeyS') moveBack = false;
+  if (e.code === 'KeyA') moveLeft = false;
+  if (e.code === 'KeyD') moveRight = false;
+  if (e.code === 'ShiftLeft') isSprinting = false;
+});
+
+// ── Pause ──
+function togglePause() {
+  if (!gameStarted || gameWon) return;
+  gamePaused = !gamePaused;
+  document.getElementById('pause-menu').classList.toggle('show', gamePaused);
+  if (gamePaused) document.exitPointerLock();
+}
+function resumeGame() {
+  gamePaused = false;
+  document.getElementById('pause-menu').classList.remove('show');
+  renderer.domElement.requestPointerLock();
+}
+
+// ── Scene Setup ──
+function initScene() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x050505);
+  clock = new THREE.Clock();
+  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 100);
+  camera.position.set(0, playerHeight, 3);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.6;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  document.body.appendChild(renderer.domElement);
+
+  ambientLight = new THREE.AmbientLight(0x222233, 0.15);
+  scene.add(ambientLight);
+
+  const ceilingLight = new THREE.PointLight(0xffddaa, 0.8, 12, 2);
+  ceilingLight.position.set(0, ROOM_H - 0.3, 0);
+  ceilingLight.castShadow = true;
+  ceilingLight.shadow.mapSize.set(512, 512);
+  scene.add(ceilingLight);
+  roomObjects.ceilingLight = ceilingLight;
+
+  flashlight = new THREE.SpotLight(0xffeedd, 1.5, 15, Math.PI / 5, 0.3, 1);
+  flashlight.castShadow = true;
+  flashlight.shadow.mapSize.set(512, 512);
+  scene.add(flashlight);
+  flashlightTarget = new THREE.Object3D();
+  scene.add(flashlightTarget);
+  flashlight.target = flashlightTarget;
+
+  const deskLamp = new THREE.PointLight(0xffcc66, 0, 6, 2);
+  deskLamp.position.set(-3.5, 2.2, -2);
+  scene.add(deskLamp);
+  roomObjects.deskLamp = deskLamp;
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+}
+
+// ── Procedural Texture Helpers ──
+function makeCanvasTexture(w, h, drawFn) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  drawFn(c.getContext('2d'), w, h);
+  return new THREE.CanvasTexture(c);
+}
+
+// ── Create Room ──
+function createRoom() {
+  // Floor
+  const floorTex = makeCanvasTexture(512, 512, (ctx, w, h) => {
+    for (let y = 0; y < h; y += 32) {
+      for (let x = 0; x < w; x += 128) {
+        const s = 30 + Math.random() * 20;
+        ctx.fillStyle = `rgb(${s+20},${s+10},${s-5})`;
+        ctx.fillRect(x, y, 126, 30);
+        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, 126, 30);
+        for (let g = 0; g < 5; g++) {
+          ctx.strokeStyle = `rgba(${s+30},${s+15},${s},0.12)`;
+          ctx.beginPath();
+          ctx.moveTo(x+Math.random()*126, y+Math.random()*30);
+          ctx.lineTo(x+Math.random()*126, y+Math.random()*30);
+          ctx.stroke();
+        }
+      }
+    }
+  });
+  floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+  floorTex.repeat.set(3, 3);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.8 }));
+  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+
+  // Ceiling
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.95 }));
+  ceil.rotation.x = Math.PI / 2; ceil.position.y = ROOM_H; scene.add(ceil);
+
+  // Walls
+  const wallTex = makeCanvasTexture(512, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#2a2520'; ctx.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 32) {
+      ctx.fillStyle = x % 64 === 0 ? 'rgba(50,40,35,0.4)' : 'rgba(35,30,25,0.2)';
+      ctx.fillRect(x, 0, 32, h);
+    }
+    for (let i = 0; i < 3000; i++) {
+      ctx.fillStyle = `rgba(${40+Math.random()*30},${35+Math.random()*25},${30+Math.random()*20},0.06)`;
+      ctx.fillRect(Math.random()*w, Math.random()*h, 2, 2);
+    }
+    for (let i = 0; i < 5; i++) {
+      const gx = Math.random()*w, gy = Math.random()*h, gr = 20+Math.random()*40;
+      const grad = ctx.createRadialGradient(gx,gy,0,gx,gy,gr);
+      grad.addColorStop(0,'rgba(20,15,10,0.12)'); grad.addColorStop(1,'rgba(20,15,10,0)');
+      ctx.fillStyle = grad; ctx.fillRect(gx-gr,gy-gr,gr*2,gr*2);
+    }
+  });
+  wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
+  wallTex.repeat.set(2, 1);
+  const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.9 });
+
+  [[0, ROOM_H/2, -ROOM_D/2, 0], [0, ROOM_H/2, ROOM_D/2, Math.PI],
+   [-ROOM_W/2, ROOM_H/2, 0, Math.PI/2], [ROOM_W/2, ROOM_H/2, 0, -Math.PI/2]].forEach(([x,y,z,ry]) => {
+    const w = new THREE.Mesh(new THREE.PlaneGeometry(ry === 0 ? ROOM_W : ROOM_D, ROOM_H), wallMat);
+    w.position.set(x,y,z); w.rotation.y = ry; w.receiveShadow = true; scene.add(w);
+  });
+
+  // Light fixture
+  const fixture = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 0.15, 8), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7 }));
+  fixture.position.set(0, ROOM_H - 0.05, 0); scene.add(fixture);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffeedd, emissive: 0xffddaa, emissiveIntensity: 0.5 }));
+  bulb.position.set(0, ROOM_H - 0.2, 0); scene.add(bulb); roomObjects.bulb = bulb;
+}
+
+// ── Create Door ──
+function createDoor() {
+  const dg = new THREE.Group();
+  const fm = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.7 });
+  [[-0.55,ROOM_H/2,0.05,0.15,ROOM_H,0.1],[0.55,ROOM_H/2,0.05,0.15,ROOM_H,0.1],[0,ROOM_H-0.1,0.05,1.25,0.12,0.1]].forEach(([x,y,z,w,h,d]) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), fm); m.position.set(x,y,z); dg.add(m);
+  });
+
+  const doorCanvas = document.createElement('canvas');
+  doorCanvas.width = 256; doorCanvas.height = 512;
+  const dctx = doorCanvas.getContext('2d');
+  dctx.fillStyle = '#3a2a1a'; dctx.fillRect(0, 0, 256, 512);
+  dctx.strokeStyle = '#2a1a0a'; dctx.lineWidth = 3;
+  dctx.strokeRect(20, 20, 216, 200); dctx.strokeRect(20, 240, 216, 250);
+  for (let i = 0; i < 200; i++) {
+    dctx.strokeStyle = `rgba(${50+Math.random()*30},${30+Math.random()*20},${10+Math.random()*15},0.08)`;
+    dctx.beginPath(); dctx.moveTo(Math.random()*256, Math.random()*512);
+    dctx.lineTo(Math.random()*256, Math.random()*512); dctx.stroke();
+  }
+  const doorMat = new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(doorCanvas), roughness: 0.7 });
+  const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(1, ROOM_H-0.2, 0.08), doorMat);
+  doorPanel.position.y = (ROOM_H-0.2)/2; doorPanel.castShadow = true; dg.add(doorPanel);
+
+  const hm = new THREE.MeshStandardMaterial({ color: 0xccaa44, metalness: 0.8, roughness: 0.2 });
+  const handle = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.02, 8, 16, Math.PI), hm);
+  handle.position.set(0.35, 1.1, 0.06); handle.rotation.z = Math.PI/2; dg.add(handle);
+  const lock = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.06), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7 }));
+  lock.position.set(0.35, 1.3, 0.06); dg.add(lock);
+  const hole = new THREE.Mesh(new THREE.CircleGeometry(0.015, 8), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+  hole.position.set(0.35, 1.3, 0.09); dg.add(hole);
+
+  dg.position.set(2, 0, -ROOM_D/2 + 0.05); scene.add(dg);
+  interactables.push({ mesh: doorPanel, name: '门', position: new THREE.Vector3(2, 1.5, -ROOM_D/2+0.1), radius: 2, action: 'door', prompt: '按 <span class="key">E</span> 尝试开门' });
+}
+
+// ── Create Desk ──
+function createDesk() {
+  const dg = new THREE.Group();
+  const wm = new THREE.MeshStandardMaterial({ color: 0x5a3a1a, roughness: 0.7 });
+  const top = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.08, 1.2), wm);
+  top.position.y = 0.8; top.castShadow = true; top.receiveShadow = true; dg.add(top);
+  [[-1.15,-0.5],[1.15,-0.5],[-1.15,0.5],[1.15,0.5]].forEach(([x,z]) => {
+    const l = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.08), wm);
+    l.position.set(x, 0.4, z); l.castShadow = true; dg.add(l);
+  });
+  const drawer = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 1), new THREE.MeshStandardMaterial({ color: 0x4a2a0a, roughness: 0.7 }));
+  drawer.position.set(0.8, 0.65, 0); drawer.castShadow = true; dg.add(drawer);
+  const dh = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.04, 0.04), new THREE.MeshStandardMaterial({ color: 0xccaa44, metalness: 0.7 }));
+  dh.position.set(0.8, 0.65, 0.52); dg.add(dh);
+
+  dg.position.set(-3.5, 0, -2); scene.add(dg);
+  interactables.push({ mesh: drawer, name: '抽屉', position: new THREE.Vector3(-3.5, 0.8, -1.5), radius: 2, action: 'drawer', prompt: '按 <span class="key">E</span> 打开抽屉' });
+}
+
+// ── Create Bookshelf ──
+function createBookshelf() {
+  const sg = new THREE.Group();
+  const wm = new THREE.MeshStandardMaterial({ color: 0x4a2a10, roughness: 0.8 });
+  sg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(3, 3.2, 0.1), wm), { position: new THREE.Vector3(0, 1.6, 0) }));
+  for (let i = 0; i < 4; i++) {
+    const s = new THREE.Mesh(new THREE.BoxGeometry(3, 0.06, 0.6), wm);
+    s.position.y = 0.5 + i * 0.85; s.castShadow = true; sg.add(s);
+  }
+  [-1.47, 1.47].forEach(x => {
+    const s = new THREE.Mesh(new THREE.BoxGeometry(0.06, 3.2, 0.6), wm);
+    s.position.set(x, 1.6, 0); sg.add(s);
+  });
+  const bookColors = [0x882222, 0x225588, 0x228833, 0x886622, 0x663388, 0x884422, 0x336666];
+  for (let row = 0; row < 3; row++) {
+    let x = -1.3;
+    while (x < 1.3) {
+      const w = 0.1 + Math.random() * 0.15, h = 0.5 + Math.random() * 0.3;
+      const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.4), new THREE.MeshStandardMaterial({ color: bookColors[Math.floor(Math.random()*bookColors.length)], roughness: 0.8 }));
+      b.position.set(x+w/2, 0.5+row*0.85+h/2+0.03, 0); b.castShadow = true; sg.add(b);
+      x += w + 0.02;
+    }
+  }
+  sg.position.set(4.5, 0, -3); sg.rotation.y = -Math.PI/2; scene.add(sg);
+
+  const specialBook = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.6, 0.42), new THREE.MeshStandardMaterial({ color: 0xcc2222, roughness: 0.6, emissive: 0x331111, emissiveIntensity: 0.3 }));
+  specialBook.position.set(4.5-0.3, 1.18, -3+1.2); specialBook.rotation.y = -Math.PI/2;
+  specialBook.castShadow = true; scene.add(specialBook);
+  interactables.push({ mesh: specialBook, name: '红色旧书', position: specialBook.position.clone(), radius: 2, action: 'book', prompt: '按 <span class="key">E</span> 查看书本' });
+}
+
+// ── Create Safe ──
+function createSafe() {
+  const sg = new THREE.Group();
+  const sm = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.7, roughness: 0.3 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.7, 0.6), sm);
+  body.position.y = 0.35; body.castShadow = true; sg.add(body);
+  sg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.6, 0.05), new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 })), { position: new THREE.Vector3(0, 0.35, 0.33) }));
+  const dial = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.03, 16), new THREE.MeshStandardMaterial({ color: 0xccaa44, metalness: 0.9 }));
+  dial.rotation.x = Math.PI/2; dial.position.set(0, 0.35, 0.36); sg.add(dial);
+  sg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.04), new THREE.MeshStandardMaterial({ color: 0xccaa44, metalness: 0.8 })), { position: new THREE.Vector3(0.25, 0.35, 0.36) }));
+  sg.position.set(4.8, 0, 2); sg.rotation.y = -Math.PI/2; scene.add(sg);
+  interactables.push({ mesh: body, name: '保险箱', position: new THREE.Vector3(4.5, 0.5, 2), radius: 2, action: 'safe', prompt: '按 <span class="key">E</span> 输入密码' });
+}
+
+// ── Create Painting ──
+function createPainting() {
+  const fm = new THREE.MeshStandardMaterial({ color: 0x8a6a2a, metalness: 0.3, roughness: 0.6 });
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.2, 0.08), fm);
+  frame.position.set(-ROOM_W/2+0.05, 2.2, -1); frame.rotation.y = Math.PI/2; frame.castShadow = true; scene.add(frame);
+
+  const paintTex = makeCanvasTexture(256, 192, (ctx) => {
+    ctx.fillStyle = '#1a2a3a'; ctx.fillRect(0, 0, 256, 192);
+    ctx.fillStyle = '#2a3a4a'; ctx.beginPath(); ctx.moveTo(0,140); ctx.lineTo(60,60); ctx.lineTo(120,120);
+    ctx.lineTo(180,40); ctx.lineTo(256,100); ctx.lineTo(256,192); ctx.lineTo(0,192); ctx.fill();
+    ctx.fillStyle = '#ddcc88'; ctx.beginPath(); ctx.arc(200,40,20,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(40,60,80,0.5)'; ctx.fillRect(0,140,256,52);
+  });
+  const painting = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1), new THREE.MeshStandardMaterial({ map: paintTex, roughness: 0.6 }));
+  painting.position.set(-ROOM_W/2+0.1, 2.2, -1); painting.rotation.y = Math.PI/2; scene.add(painting);
+  interactables.push({ mesh: painting, name: '油画', position: new THREE.Vector3(-ROOM_W/2+0.3, 2.2, -1), radius: 2.5, action: 'painting', prompt: '按 <span class="key">E</span> 检查油画' });
+}
+
+// ── Create Wardrobe ──
+function createWardrobe() {
+  const wg = new THREE.Group();
+  const wm = new THREE.MeshStandardMaterial({ color: 0x3a2510, roughness: 0.8 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 0.8), wm);
+  body.position.y = 1.5; body.castShadow = true; wg.add(body);
+  [-0.48, 0.48].forEach(x => {
+    wg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.94, 2.8, 0.05), new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 0.7 })), { position: new THREE.Vector3(x, 1.5, 0.43) }));
+  });
+  [-0.15, 0.15].forEach(x => {
+    wg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.15, 0.04), new THREE.MeshStandardMaterial({ color: 0xccaa44, metalness: 0.7 })), { position: new THREE.Vector3(x, 1.3, 0.48) }));
+  });
+  wg.position.set(-4.5, 0, 3); wg.rotation.y = Math.PI/2; scene.add(wg);
+  interactables.push({ mesh: body, name: '衣柜', position: new THREE.Vector3(-4.5, 1.5, 3), radius: 2.5, action: 'wardrobe', prompt: '按 <span class="key">E</span> 打开衣柜' });
+}
+
+// ── Create Bed ──
+function createBed() {
+  const bg = new THREE.Group();
+  const fm = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.7 });
+  bg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(2, 0.4, 2.5), fm), { position: { y: 0.2 }, castShadow: true }));
+  bg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.25, 2.3), new THREE.MeshStandardMaterial({ color: 0xdddde8, roughness: 0.9 })), { position: { y: 0.52 }, castShadow: true }));
+  bg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.12, 0.5), new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.9 })), { position: new THREE.Vector3(0, 0.72, -0.8), castShadow: true }));
+  bg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.08, 1.5), new THREE.MeshStandardMaterial({ color: 0x444466, roughness: 0.85 })), { position: new THREE.Vector3(0, 0.68, 0.3) }));
+  bg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(2, 0.8, 0.1), fm), { position: new THREE.Vector3(0, 0.8, -1.25), castShadow: true }));
+  bg.position.set(3, 0, 3.5); bg.rotation.y = Math.PI; scene.add(bg);
+}
+
+// ── Create Clock ──
+function createClock() {
+  const cg = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.06, 16), new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4, metalness: 0.5 }));
+  body.rotation.x = Math.PI/2; cg.add(body);
+
+  const faceTex = makeCanvasTexture(128, 128, (ctx) => {
+    ctx.fillStyle = '#fffff0'; ctx.beginPath(); ctx.arc(64,64,60,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#333'; ctx.font = 'bold 14px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (let i = 1; i <= 12; i++) { const a = (i/12)*Math.PI*2-Math.PI/2; ctx.fillText(i.toString(), 64+Math.cos(a)*48, 64+Math.sin(a)*48); }
+    ctx.strokeStyle = '#333'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(64,64); ctx.lineTo(94,64); ctx.stroke();
+    ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(64,64); ctx.lineTo(64,24); ctx.stroke();
+  });
+  cg.add(new THREE.Mesh(new THREE.CircleGeometry(0.23, 16), new THREE.MeshStandardMaterial({ map: faceTex })));
+  cg.children[1].position.z = 0.035;
+
+  const pm = new THREE.MeshStandardMaterial({ color: 0xccaa44, metalness: 0.8 });
+  const pend = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.4, 4), pm); pend.position.y = -0.3; cg.add(pend);
+  const bob = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), pm); bob.position.y = -0.5; cg.add(bob);
+  roomObjects.pendulum = pend; roomObjects.pendulumBob = bob;
+
+  cg.position.set(0, 2.5, -ROOM_D/2+0.1); scene.add(cg);
+  interactables.push({ mesh: body, name: '挂钟', position: new THREE.Vector3(0, 2.5, -ROOM_D/2+0.3), radius: 2.5, action: 'clock', prompt: '按 <span class="key">E</span> 检查挂钟' });
+}
+
+// ── Create Desk Lamp ──
+function createDeskLamp() {
+  const lg = new THREE.Group();
+  const mm = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7, roughness: 0.3 });
+  lg.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 0.05, 8), mm), { position: { y: 0.025 } }));
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.6, 6), mm); arm.position.y = 0.35; arm.rotation.z = 0.3; lg.add(arm);
+  const shade = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.12, 8, 1, true), new THREE.MeshStandardMaterial({ color: 0x225522, roughness: 0.6, side: THREE.DoubleSide }));
+  shade.position.set(0.1, 0.65, 0); lg.add(shade);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), new THREE.MeshStandardMaterial({ color: 0xffeedd, emissive: 0xffcc66, emissiveIntensity: 0 }));
+  bulb.position.set(0.1, 0.6, 0); lg.add(bulb); roomObjects.lampBulb = bulb;
+
+  lg.position.set(-3.5, 0.84, -2.3); scene.add(lg);
+  interactables.push({ mesh: lg.children[0], name: '台灯', position: new THREE.Vector3(-3.5, 1.2, -2.3), radius: 1.8, action: 'lamp', prompt: '按 <span class="key">E</span> 开关台灯' });
+}
+
+// ── Create Details ──
+function createDetails() {
+  // Mug
+  const mug = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.12, 8), new THREE.MeshStandardMaterial({ color: 0x884422, roughness: 0.7 }));
+  mug.position.set(-3, 0.9, -1.8); mug.castShadow = true; scene.add(mug);
+  // Paper
+  const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.4), new THREE.MeshStandardMaterial({ color: 0xeeeedd, roughness: 0.9 }));
+  paper.rotation.x = -Math.PI/2; paper.position.set(-4, 0.85, -2.5); scene.add(paper);
+  // Rug
+  const rugTex = makeCanvasTexture(128, 86, (ctx) => {
+    ctx.fillStyle = '#5a2a2a'; ctx.fillRect(0, 0, 128, 86);
+    ctx.strokeStyle = '#8a4a2a'; ctx.lineWidth = 4; ctx.strokeRect(8, 8, 112, 70);
+    ctx.strokeStyle = '#aa6a3a'; ctx.lineWidth = 2; ctx.strokeRect(16, 16, 96, 54);
+    for (let x = 24; x < 120; x += 16) for (let y = 24; y < 75; y += 16) {
+      ctx.fillStyle = '#7a3a2a'; ctx.fillRect(x, y, 8, 8);
+    }
+  });
+  const rug = new THREE.Mesh(new THREE.PlaneGeometry(3, 2), new THREE.MeshStandardMaterial({ map: rugTex, roughness: 0.95 }));
+  rug.rotation.x = -Math.PI/2; rug.position.set(0, 0.01, 1); scene.add(rug);
+  // Bricked window
+  const wg = new THREE.Group();
+  wg.add(new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.2, 0.1), new THREE.MeshStandardMaterial({ color: 0x4a3a2a, roughness: 0.7 })));
+  const bm = new THREE.MeshStandardMaterial({ color: 0x6a4a3a, roughness: 0.9 });
+  for (let by = -0.4; by < 0.5; by += 0.12) for (let bx = -0.55; bx < 0.6; bx += 0.15) {
+    const brick = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.1, 0.08), bm);
+    brick.position.set(bx+(Math.floor(by*10)%2)*0.075, by, 0); wg.add(brick);
+  }
+  wg.position.set(0, 2.2, ROOM_D/2-0.05); wg.rotation.y = Math.PI; scene.add(wg);
+}
+
+// ── Inventory ──
+function updateInventoryUI() {
+  const c = document.getElementById('inventory'); c.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const s = document.createElement('div');
+    s.className = 'inv-slot' + (i === selectedSlot ? ' selected' : '');
+    if (inventory[i]) {
+      s.textContent = inventory[i].icon;
+      const n = document.createElement('div'); n.className = 'inv-name'; n.textContent = inventory[i].name; s.appendChild(n);
+    }
+    s.onclick = () => { selectedSlot = selectedSlot === i ? -1 : i; updateInventoryUI(); };
+    c.appendChild(s);
+  }
+}
+function addItem(icon, name, id) {
+  if (inventory.length >= 6) return false;
+  inventory.push({ icon, name, id }); updateInventoryUI(); playSuccess();
+  showMessage('获得物品', `${icon} ${name}`); return true;
+}
+function hasItem(id) { return inventory.some(i => i.id === id); }
+function removeItem(id) { inventory = inventory.filter(i => i.id !== id); updateInventoryUI(); }
+
+// ── Messages ──
+function showMessage(title, body) {
+  document.getElementById('msg-title').textContent = title;
+  document.getElementById('msg-body').innerHTML = body;
+  document.getElementById('message').classList.add('show'); playClick();
+}
+function closeMessage() { document.getElementById('message').classList.remove('show'); }
+
+// ── Code Input ──
+function openCodeInput(title, callback) {
+  document.getElementById('code-title').textContent = title;
+  document.getElementById('code-field').value = '';
+  document.getElementById('code-input').classList.add('show');
+  codeCallback = callback;
+  setTimeout(() => document.getElementById('code-field').focus(), 100);
+}
+function closeCodeInput() { document.getElementById('code-input').classList.remove('show'); codeCallback = null; }
+function submitCode() { const code = document.getElementById('code-field').value; if (codeCallback) codeCallback(code); closeCodeInput(); }
+
+// ── Notes ──
+function addNote(text) {
+  notes.push(text);
+  const nb = document.getElementById('notebook');
+  const n = document.createElement('div'); n.className = 'note'; n.textContent = '• ' + text; nb.appendChild(n);
+}
+
+// ── Hints ──
+const hints = ['试试看看书架上的红色旧书……','书里提到了"时间是答案"，看看挂钟。','挂钟指向 3:15，这可能是一个密码。','用密码 3115 打开保险箱。','台灯下面也许有什么……','检查一下油画后面。','找到万能钥匙就能开门了。'];
+function showHint() {
+  showMessage('💡 提示', hints[Math.min(hintIndex, hints.length - 1)]);
+  hintIndex++; hintCount++;
+}
+
+// ── Interaction ──
+function updateInteraction() {
+  const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+  canInteract = false; currentInteractable = null;
+  let closest = null, closestDist = Infinity;
+  interactables.forEach(obj => {
+    const dist = camera.position.distanceTo(obj.position);
+    if (dist < obj.radius) {
+      const toObj = new THREE.Vector3().subVectors(obj.position, camera.position).normalize();
+      if (dir.dot(toObj) > 0.5 && dist < closestDist) { closestDist = dist; closest = obj; }
+    }
+  });
+  const prompt = document.getElementById('interaction-prompt');
+  if (closest) {
+    canInteract = true; currentInteractable = closest;
+    prompt.innerHTML = closest.prompt; prompt.classList.add('show');
+  } else { prompt.classList.remove('show'); }
+}
+
+function tryInteract() {
+  if (!currentInteractable || gamePaused) return;
+  const obj = currentInteractable;
+  switch (obj.action) {
+    case 'door':
+      if (puzzleState.doorUnlocked) { gameWon = true; document.getElementById('win-screen').classList.add('show'); document.getElementById('win-time').textContent = `用时: ${document.getElementById('timer').textContent}`; document.getElementById('win-hints').textContent = `使用提示: ${hintCount} 次`; document.exitPointerLock(); playSuccess(); }
+      else if (hasItem('master_key')) { puzzleState.doorUnlocked = true; removeItem('master_key'); playDoor(); showMessage('🔓 门开了！', '你用万能钥匙打开了门锁！<br>快出去！'); addNote('门已解锁！'); }
+      else { showMessage('🔒 门锁住了', '需要找到钥匙才能打开这扇门。'); playError(); }
+      break;
+    case 'book':
+      if (!puzzleState.hasBookClue) { puzzleState.hasBookClue = true; showMessage('📖 红色旧书', '翻开书页，里面夹着一张纸条：<br><br><i>"时间是答案。看看墙上的钟。"</i>'); addNote('书中的纸条："时间是答案"'); addNote('查看挂钟'); playSuccess(); }
+      else showMessage('📖 红色旧书', '纸条上写着："时间是答案。看看墙上的钟。"');
+      break;
+    case 'clock':
+      showMessage('🕐 挂钟', '一座老式挂钟，指针停在了 <b>3:15</b>。<br><br>钟摆还在轻轻摆动……'); addNote('挂钟停在 3:15'); playClick(); break;
+    case 'safe':
+      if (puzzleState.safeOpened) showMessage('🔓 保险箱', '保险箱已经打开了，里面是空的。');
+      else openCodeInput('输入4位密码', code => {
+        if (code === '3115') { puzzleState.safeOpened = true; playUnlock(); showMessage('🔓 保险箱打开了！', '密码正确！保险箱里有一把<b>万能钥匙</b>。'); addItem('🔑', '万能钥匙', 'master_key'); addNote('保险箱密码：3115'); }
+        else { playError(); showMessage('❌ 密码错误', '密码不对，再想想……'); }
+      });
+      break;
+    case 'drawer':
+      if (puzzleState.drawerUnlocked) showMessage('📦 抽屉', '抽屉里是空的。');
+      else if (hasItem('drawer_key')) { puzzleState.drawerUnlocked = true; removeItem('drawer_key'); playUnlock(); showMessage('🔓 抽屉打开了！', '抽屉里有一张<b>旧照片</b>，背面写着：<br><br><i>"保险箱的密码就藏在你能看到时间的地方。"</i>'); addNote('照片背面："密码藏在能看到时间的地方"'); }
+      else { showMessage('🔒 抽屉锁住了', '需要一把小钥匙。'); playError(); }
+      break;
+    case 'painting':
+      if (!puzzleState.paintingMoved) { puzzleState.paintingMoved = true; showMessage('🖼️ 油画', '你移动了油画，发现墙上有一个<b>暗格</b>！<br><br>里面有一把<b>抽屉钥匙</b>。'); addItem('🗝️', '抽屉钥匙', 'drawer_key'); addNote('油画后面有暗格'); playSuccess(); }
+      else showMessage('🖼️ 油画', '暗格已经空了。');
+      break;
+    case 'wardrobe':
+      if (!puzzleState.wardrobeOpened) { puzzleState.wardrobeOpened = true; showMessage('🚪 衣柜', '打开衣柜，在深处发现一张纸条：<br><br><i>"灯下有秘密。"</i>'); addNote('衣柜纸条："灯下有秘密"'); playSuccess(); }
+      else showMessage('🚪 衣柜', '没有更多东西了。');
+      break;
+    case 'lamp':
+      puzzleState.lampOn = !puzzleState.lampOn;
+      if (puzzleState.lampOn) {
+        roomObjects.deskLamp.intensity = 1.5; roomObjects.lampBulb.material.emissiveIntensity = 2; playClick();
+        if (!puzzleState.hiddenNoteFound) {
+          setTimeout(() => { puzzleState.hiddenNoteFound = true; showMessage('💡 台灯亮了！', '灯光照亮了桌面，灯座下面压着一张纸条：<br><br><i>"门的密码是万能钥匙。"</i>'); addNote('灯座纸条："门的密码是万能钥匙"'); playSuccess(); }, 400);
+        }
+      } else { roomObjects.deskLamp.intensity = 0; roomObjects.lampBulb.material.emissiveIntensity = 0; playClick(); }
+      break;
+  }
+}
+
+// ── Player Movement ──
+function updatePlayer(dt) {
+  if (!gameStarted || gameWon || gamePaused) return;
+  const speed = isSprinting ? SPRINT_SPEED : MOVE_SPEED;
+  const direction = new THREE.Vector3();
+  if (moveForward) direction.z -= 1; if (moveBack) direction.z += 1;
+  if (moveLeft) direction.x -= 1; if (moveRight) direction.x += 1;
+  if (direction.length() > 0) { direction.normalize().applyAxisAngle(new THREE.Vector3(0,1,0), yaw); velocity.add(direction.multiplyScalar(speed * dt)); }
+  velocity.multiplyScalar(0.85);
+  const newPos = camera.position.clone().add(velocity.clone().multiplyScalar(dt));
+  const m = 0.3;
+  newPos.x = Math.max(-ROOM_W/2+m, Math.min(ROOM_W/2-m, newPos.x));
+  newPos.z = Math.max(-ROOM_D/2+m, Math.min(ROOM_D/2-m, newPos.z));
+  newPos.y = playerHeight;
+  camera.position.copy(newPos);
+  camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+  flashlight.position.copy(camera.position);
+  const fd = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+  flashlightTarget.position.copy(camera.position).add(fd.multiplyScalar(10));
+}
+
+// ── Light Flicker ──
+let flickerTimer = 0;
+function updateLightFlicker(dt) {
+  flickerTimer += dt;
+  if (flickerTimer > 3 + Math.random() * 5) {
+    flickerTimer = 0;
+    const flicker = () => { roomObjects.ceilingLight.intensity = Math.random()*0.5; roomObjects.bulb.material.emissiveIntensity = Math.random()*0.3; setTimeout(() => { roomObjects.ceilingLight.intensity = 0.8; roomObjects.bulb.material.emissiveIntensity = 0.5; }, 50+Math.random()*100); };
+    flicker(); setTimeout(flicker, 200); setTimeout(flicker, 400);
+  }
+}
+
+// ── Timer ──
+function updateTimer() {
+  if (!gameStarted || gameWon || gamePaused) return;
+  elapsedTime += 1/60;
+  const min = Math.floor(elapsedTime/60), sec = Math.floor(elapsedTime%60);
+  document.getElementById('timer').textContent = `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+}
+
+// ── Pendulum ──
+function updatePendulum(time) {
+  if (roomObjects.pendulum) { roomObjects.pendulum.rotation.z = Math.sin(time*2)*0.3; roomObjects.pendulumBob.position.x = Math.sin(time*2)*0.15; }
+}
+
+// ── Start ──
+function startGame() {
+  initAudio(); startBGMusic();
+  document.getElementById('crosshair').style.display = 'block';
+  document.getElementById('inventory').style.display = 'flex';
+  document.getElementById('notebook').style.display = 'block';
+  document.getElementById('timer').style.display = 'block';
+  document.getElementById('hint-btn').style.display = 'flex';
+  document.getElementById('controls-hint').style.display = 'block';
+  updateInventoryUI(); gameStarted = true;
+  renderer.domElement.requestPointerLock();
+  showMessage('🔐 密室逃脱', '你在一间陌生的房间里醒来。<br>门被锁住了，你需要找到出路。<br><br><b>WASD</b> 移动 | <b>鼠标</b> 环顾 | <b>E</b> 互动 | <b>ESC</b> 暂停');
+}
+
+// ── Init ──
+function init() {
+  initScene(); createRoom(); createDoor(); createDesk(); createBookshelf();
+  createSafe(); createPainting(); createWardrobe(); createBed(); createClock();
+  createDeskLamp(); createDetails(); initPointerLock();
+
+  // Auto start after brief delay (simulating loading)
+  setTimeout(() => startGame(), 800);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (gameStarted && !gameWon) {
+    updatePlayer(dt); updateInteraction(); updateLightFlicker(dt);
+    updateTimer(); updatePendulum(clock.getElapsedTime());
+  }
+  renderer.render(scene, camera);
+}
+init(); animate();
+</script>
+</body>
+</html>

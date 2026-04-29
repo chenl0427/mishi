@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔐 密室逃脱 - ESCAPE ROOM</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans SC',sans-serif;background:#0a0a0a;color:#fff;overflow-x:hidden}
+
+/* ── Hero Section ── */
+.hero{
+  position:relative;height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 30% 50%, rgba(100,20,20,0.3) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 50%, rgba(20,20,60,0.3) 0%, transparent 60%),
+    linear-gradient(180deg, #0a0a0a 0%, #1a0a0a 50%, #0a0a1a 100%);
+}
+.hero-particles{position:absolute;inset:0;overflow:hidden}
+.particle{
+  position:absolute;width:2px;height:2px;background:rgba(255,100,50,0.4);
+  border-radius:50%;animation:float 8s infinite ease-in-out;
+}
+@keyframes float{
+  0%,100%{transform:translateY(0) scale(1);opacity:0.3}
+  50%{transform:translateY(-100px) scale(1.5);opacity:0.8}
+}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:800px;padding:0 20px}
+.hero-content h1{
+  font-size:clamp(48px,8vw,96px);font-weight:900;
+  background:linear-gradient(135deg,#ff4444,#ff8844,#ff4444);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:0 0 60px rgba(255,50,50,0.3);
+  animation:glitch 5s infinite;
+  letter-spacing:4px;
+}
+@keyframes glitch{
+  0%,95%,100%{transform:none}
+  96%{transform:translate(-2px,1px) skewX(-1deg)}
+  97%{transform:translate(2px,-1px) skewX(1deg)}
+  98%{transform:translate(-1px,2px)}
+}
+.hero-content .tagline{
+  font-size:clamp(16px,2.5vw,24px);
+  color:rgba(255,255,255,0.5);margin:20px 0 40px;
+  letter-spacing:6px;text-transform:uppercase;
+}
+.hero-content .desc{
+  font-size:16px;color:rgba(255,255,255,0.6);line-height:2;
+  max-width:600px;margin:0 auto 40px;
+}
+.play-btn{
+  display:inline-block;padding:18px 60px;
+  font-size:20px;font-weight:700;letter-spacing:3px;
+  background:linear-gradient(135deg,#aa2222,#cc4444);
+  border:none;border-radius:60px;color:#fff;cursor:pointer;
+  text-decoration:none;transition:all 0.3s;
+  box-shadow:0 0 30px rgba(200,50,50,0.3);
+}
+.play-btn:hover{
+  transform:scale(1.05);box-shadow:0 0 60px rgba(200,50,50,0.5);
+}
+.scroll-hint{
+  position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+  color:rgba(255,255,255,0.3);font-size:13px;
+  animation:bob 2s infinite;
+}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(10px)}}
+.scroll-hint::after{
+  content:'↓';display:block;text-align:center;font-size:20px;margin-top:5px;
+}
+
+/* ── Features Section ── */
+.features{
+  padding:100px 20px;max-width:1200px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px;
+}
+.feature-card{
+  padding:32px;background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.06);border-radius:16px;
+  transition:all 0.3s;
+}
+.feature-card:hover{
+  background:rgba(255,255,255,0.06);
+  border-color:rgba(255,100,50,0.2);
+  transform:translateY(-4px);
+}
+.feature-card .icon{font-size:40px;margin-bottom:16px}
+.feature-card h3{font-size:18px;margin-bottom:10px;color:#ff8866}
+.feature-card p{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8}
+
+/* ── Screenshots Section ── */
+.screenshots{
+  padding:80px 20px;text-align:center;
+}
+.screenshots h2{
+  font-size:36px;margin-bottom:50px;
+  color:rgba(255,255,255,0.8);
+}
+.screenshots .screens-grid{
+  max-width:1000px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(2,1fr);gap:20px;
+}
+.screenshot-card{
+  position:relative;padding:60px 30px;
+  background:linear-gradient(135deg,rgba(100,20,20,0.2),rgba(20,20,60,0.2));
+  border:1px solid rgba(255,255,255,0.06);border-radius:12px;
+  overflow:hidden;
+}
+.screenshot-card .room-icon{font-size:60px;margin-bottom:16px}
+.screenshot-card h4{font-size:16px;margin-bottom:8px;color:#ff8866}
+.screenshot-card p{font-size:13px;color:rgba(255,255,255,0.4)}
+.screenshot-card::before{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(circle,rgba(255,100,50,0.05) 0%,transparent 60%);
+  animation:pulse 4s infinite;
+}
+@keyframes pulse{0%,100%{opacity:0.3}50%{opacity:0.8}}
+
+/* ── Puzzle Section ── */
+.puzzle-section{
+  padding:80px 20px;max-width:800px;margin:0 auto;
+}
+.puzzle-section h2{
+  font-size:36px;text-align:center;margin-bottom:50px;
+  color:rgba(255,255,255,0.8);
+}
+.puzzle-step{
+  display:flex;gap:20px;align-items:flex-start;margin-bottom:30px;
+  padding:20px;background:rgba(255,255,255,0.02);
+  border-left:3px solid rgba(255,100,50,0.3);border-radius:0 12px 12px 0;
+}
+.puzzle-step .step-num{
+  font-size:28px;font-weight:900;color:rgba(255,100,50,0.5);
+  min-width:50px;text-align:center;
+}
+.puzzle-step h4{font-size:15px;color:#ff8866;margin-bottom:4px}
+.puzzle-step p{font-size:13px;color:rgba(255,255,255,0.5)}
+
+/* ── Tech Section ── */
+.tech-section{
+  padding:80px 20px;text-align:center;
+  background:rgba(255,255,255,0.01);
+}
+.tech-section h2{font-size:36px;margin-bottom:30px;color:rgba(255,255,255,0.8)}
+.tech-badges{
+  display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:30px;
+}
+.tech-badge{
+  padding:8px 20px;background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);border-radius:20px;
+  font-size:13px;color:rgba(255,255,255,0.6);
+}
+
+/* ── Footer ── */
+.footer{
+  padding:40px 20px;text-align:center;
+  color:rgba(255,255,255,0.2);font-size:12px;
+  border-top:1px solid rgba(255,255,255,0.05);
+}
+
+/* ── Noise Overlay ── */
+.noise{
+  position:fixed;inset:0;pointer-events:none;z-index:100;
+  opacity:0.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Vignette ── */
+.vignette{
+  position:fixed;inset:0;pointer-events:none;z-index:99;
+  background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.5) 100%);
+}
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="vignette"></div>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-particles" id="particles"></div>
+  <div class="hero-content">
+    <h1>密室逃脱</h1>
+    <div class="tagline">ESCAPE ROOM</div>
+    <div class="desc">
+      你在一间陌生的房间里醒来，头痛欲裂。<br>
+      灯忽明忽暗，门被锁住了。<br>
+      仔细观察每一个角落，找到线索，解开谜题。<br>
+      时间不多了……你能逃出去吗？
+    </div>
+    <a href="index.html" class="play-btn">开始逃脱 →</a>
+  </div>
+  <div class="scroll-hint">向下滚动了解更多</div>
+</section>
+
+<section class="features">
+  <div class="feature-card">
+    <div class="icon">🏠</div>
+    <h3>沉浸式 3D 环境</h3>
+    <p>全 3D 渲染的写实密室，木地板纹理、老化墙面、闪烁灯光。每一个细节都经过精心设计，让你身临其境。</p>
+  </div>
+  <div class="feature-card">
+    <div class="icon">🧩</div>
+    <h3>连环谜题设计</h3>
+    <p>8 道环环相扣的谜题，从书架到挂钟，从油画到保险箱。每一步都需要仔细观察和逻辑推理。</p>
+  </div>
+  <div class="feature-card">
+    <div class="icon">🔦</div>
+    <h3>手电筒探索</h3>
+    <p>昏暗的房间里，手电筒是你唯一的光源。闪烁的吊灯、忽明忽暗的台灯，营造出紧张的逃脱氛围。</p>
+  </div>
+  <div class="feature-card">
+    <div class="icon">📝</div>
+    <h3>自动笔记系统</h3>
+    <p>发现的线索自动记录到笔记本，物品栏管理拾取的道具。不用担心遗漏任何关键信息。</p>
+  </div>
+  <div class="feature-card">
+    <div class="icon">🎵</div>
+    <h3>氛围音效</h3>
+    <p>解锁声、开门声、脚步声……每个互动都有逼真的音效反馈，增强沉浸感。</p>
+  </div>
+  <div class="feature-card">
+    <div class="icon">💡</div>
+    <h3>提示系统</h3>
+    <p>卡住了？点击提示按钮获取逐步引导。新手也能顺利通关，高手可以挑战零提示逃脱。</p>
+  </div>
+</section>
+
+<section class="screenshots">
+  <h2>探索密室的每一个角落</h2>
+  <div class="screens-grid">
+    <div class="screen-card">
+      <div class="room-icon">📚</div>
+      <h4>书架区域</h4>
+      <p>旧书、纸条、隐藏的线索</p>
+    </div>
+    <div class="screen-card">
+      <div class="room-icon">🖥️</div>
+      <h4>书桌区域</h4>
+      <p>抽屉、台灯、保险箱</p>
+    </div>
+    <div class="screen-card">
+      <div class="room-icon">🖼️</div>
+      <h4>墙壁区域</h4>
+      <p>油画、挂钟、暗格</p>
+    </div>
+    <div class="screen-card">
+      <div class="room-icon">🚪</div>
+      <h4>衣柜区域</h4>
+      <p>衣服、纸条、秘密</p>
+    </div>
+  </div>
+</section>
+
+<section class="puzzle-section">
+  <h2>谜题流程（剧透警告）</h2>
+  <div class="puzzle-step">
+    <div class="step-num">01</div>
+    <div><h4>探索书架</h4><p>找到红色旧书，发现纸条："时间是答案"</p></div>
+  </div>
+  <div class="puzzle-step">
+    <div class="step-num">02</div>
+    <div><h4>观察挂钟</h4><p>指针停在 3:15，这是一个四位密码</p></div>
+  </div>
+  <div class="puzzle-step">
+    <div class="step-num">03</div>
+    <div><h4>移动油画</h4><p>发现墙上的暗格，获得抽屉钥匙</p></div>
+  </div>
+  <div class="puzzle-step">
+    <div class="step-num">04</div>
+    <div><h4>打开抽屉</h4><p>照片背面写着："保险箱密码藏在能看到时间的地方"</p></div>
+  </div>
+  <div class="puzzle-step">
+    <div class="step-num">05</div>
+    <div><h4>搜索衣柜</h4><p>找到纸条："灯下有秘密"</p></div>
+  </div>
+  <div class="puzzle-step">
+    <div class="step-num">06</div>
+    <div><h4>打开台灯</h4><p>灯座下压着纸条："门的密码是万能钥匙"</p></div>
+  </div>
+  <div class="puzzle-step">
+    <div class="step-num">07</div>
+    <div><h4>破解保险箱</h4><p>输入密码 3115，获得万能钥匙</p></div>
+  </div>
+  <div class="puzzle-step">
+    <div class="step-num">08</div>
+    <div><h4>逃脱！</h4><p>用万能钥匙打开房门，成功逃脱！</p></div>
+  </div>
+</section>
+
+<section class="tech-section">
+  <h2>技术规格</h2>
+  <p style="color:rgba(255,255,255,0.5);margin-bottom:20px">零依赖、零构建、纯浏览器运行</p>
+  <div class="tech-badges">
+    <span class="tech-badge">Three.js</span>
+    <span class="tech-badge">Web Audio API</span>
+    <span class="tech-badge">Pointer Lock API</span>
+    <span class="tech-badge">Canvas 2D</span>
+    <span class="tech-badge">程序化纹理</span>
+    <span class="tech-badge">实时光影</span>
+    <span class="tech-badge">粒子系统</span>
+    <span class="tech-badge">零构建工具</span>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>🔐 密室逃脱 - ESCAPE ROOM | 基于 Three.js 的 3D 密室逃脱游戏</p>
+  <p style="margin-top:8px">MIT License</p>
+</footer>
+
+<script>
+// Floating particles
+const container = document.getElementById('particles');
+for (let i = 0; i < 30; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.left = Math.random() * 100 + '%';
+  p.style.top = Math.random() * 100 + '%';
+  p.style.animationDelay = Math.random() * 8 + 's';
+  p.style.animationDuration = (5 + Math.random() * 5) + 's';
+  container.appendChild(p);
+}
+</script>
+</body>
+</html>
