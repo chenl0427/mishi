@@ -185,11 +185,69 @@ canvas{display:block}
   <button class="restart-btn" onclick="location.href='index.html'">返回主菜单</button>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// ═══════════════════════════════════════════════
-// 🔐 密室逃脱 - First Person Escape Room
-// ═══════════════════════════════════════════════
+// ── Loading Manager ──
+let loadError = null;
+window.onerror = function(msg, url, line) {
+  if (msg.indexOf('THREE') !== -1 || msg.indexOf('WebGL') !== -1 || msg.indexOf('three') !== -1) {
+    loadError = msg;
+  }
+};
+
+function checkWebGL() {
+  try {
+    const canvas = document.createElement('canvas');
+    return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+  } catch(e) {
+    return false;
+  }
+}
+
+function showLoadError(msg) {
+  document.body.innerHTML = `
+    <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0a;color:#fff;font-family:system-ui,sans-serif;text-align:center;padding:40px;">
+      <div style="font-size:48px;margin-bottom:20px">⚠️</div>
+      <h1 style="font-size:24px;margin-bottom:16px">加载失败</h1>
+      <p style="color:#ff8866;margin-bottom:12px">${msg}</p>
+      <p style="color:#888;font-size:14px;max-width:500px">请尝试：<br>• 刷新页面<br>• 使用 Chrome 或 Firefox 浏览器<br>• 确保 WebGL 已启用<br>• 检查网络连接</p>
+      <button onclick="location.reload()" style="margin-top:24px;padding:12px 32px;background:#aa2222;color:#fff;border:none;border-radius:8px;cursor:pointer">重新加载</button>
+    </div>
+  `;
+}
+
+function loadThreeJS() {
+  return new Promise((resolve, reject) => {
+    if (typeof THREE !== 'undefined') {
+      resolve();
+      return;
+    }
+    
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('无法加载 Three.js 库'));
+    document.head.appendChild(script);
+  });
+}
+
+async function init() {
+  try {
+    if (!checkWebGL()) {
+      throw new Error('您的浏览器不支持 WebGL');
+    }
+    
+    await loadThreeJS();
+    
+    initScene(); createRoom(); createDoor(); createDesk(); createBookshelf();
+    createSafe(); createPainting(); createWardrobe(); createBed(); createClock();
+    createDeskLamp(); createDetails(); initPointerLock();
+    
+    setTimeout(() => startGame(), 800);
+  } catch (error) {
+    console.error('初始化错误:', error);
+    showLoadError(error.message || '游戏初始化失败');
+  }
+}
 
 let scene, camera, renderer, clock;
 let gameStarted = false, gameWon = false, gamePaused = false;
@@ -841,17 +899,12 @@ function startGame() {
   showMessage('🔐 密室逃脱', '你在一间陌生的房间里醒来。<br>门被锁住了，你需要找到出路。<br><br><b>WASD</b> 移动 | <b>鼠标</b> 环顾 | <b>E</b> 互动 | <b>ESC</b> 暂停');
 }
 
-// ── Init ──
-function init() {
-  initScene(); createRoom(); createDoor(); createDesk(); createBookshelf();
-  createSafe(); createPainting(); createWardrobe(); createBed(); createClock();
-  createDeskLamp(); createDetails(); initPointerLock();
-
-  // Auto start after brief delay (simulating loading)
-  setTimeout(() => startGame(), 800);
-}
-
+// ── Animation Loop ──
 function animate() {
+  if (!renderer || !scene || !camera) {
+    requestAnimationFrame(animate);
+    return;
+  }
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
   if (gameStarted && !gameWon) {
@@ -860,7 +913,12 @@ function animate() {
   }
   renderer.render(scene, camera);
 }
-init(); animate();
+
+// ── Start Everything ──
+window.addEventListener('load', () => {
+  init();
+  animate();
+});
 </script>
 </body>
 </html>
