@@ -1,134 +1,66 @@
-# 🔐 密室逃脱 - ESCAPE ROOM
+# Polyglot - 多语种在线教育平台 🌍
 
-> *A 3D first-person escape room puzzle game*
+一款支持英语、日语、韩语等主流语言的沉浸式在线语言学习平台。
 
-[![Version](https://img.shields.io/badge/version-1.0.0-red?style=flat-square)]()
-[![Engine](https://img.shields.io/badge/engine-Three.js%20r128-blue?style=flat-square)]()
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)]()
-[![Platform](https://img.shields.io/badge/platform-Web%20Browser-orange?style=flat-square)]()
-[![Build](https://img.shields.io/badge/build-2026.04.29-purple?style=flat-square)]()
+## ✨ 核心功能
 
----
+- 📚 **分级课程体系** - 从入门到精通的完整学习路径
+- ✏️ **互动式学习模块** - 单词记忆、语法练习、口语跟读、听力训练
+- 📊 **学习进度追踪** - 实时掌握学习数据和成长轨迹
+- 👤 **用户注册登录** - 个性化学习体验
+- 🎯 **个性化推荐** - AI驱动的智能学习路径
+- 👥 **社区交流** - 与学习者分享交流
+- 🏆 **成就激励系统** - 解锁成就，激励持续学习
 
-## 🎮 About
+## 🎨 技术栈
 
-你在一间昏暗的房间里醒来，头痛欲裂。灯忽明忽暗，门被锁住了。你必须仔细观察房间里的每一个角落，找到隐藏的线索，解开环环相扣的谜题，在时间耗尽前逃出密室。
+- HTML5
+- CSS3 (现代渐变、玻璃拟态效果)
+- JavaScript (原生)
+- Google Fonts (Inter, Noto Sans系列)
 
-## ✨ Features
+## 🚀 快速开始
 
-### 🏠 Immersive 3D Environment
-- 全 3D 渲染的写实密室，程序化生成的精细纹理
-- 木地板纹路、老化墙纸、砖砌窗户、老式挂钟
-- 闪烁吊灯、可开关台灯、手持手电筒
-- ACES 色调映射 + 柔和阴影 + 氛围雾效
-
-### 🧩 8-Step Puzzle Chain
-- 🔍 红色旧书 → 🕐 挂钟时间 → 🖼️ 油画暗格 → 📦 抽屉解锁
-- 🚪 衣柜线索 → 💡 台灯秘密 → 🔒 保险箱密码 → 🚪 逃脱！
-
-### 🎵 Audio Design
-- Web Audio API 合成的氛围音乐
-- 互动音效（点击、解锁、开门、错误提示）
-- 脚步声、环境音
-
-### 📝 Game Systems
-- 自动笔记系统（记录发现的线索）
-- 6 格物品栏
-- 渐进式提示系统
-- 计时器 + 成就追踪
-- 暂停菜单 + 设置面板
-
-## 🕹️ Controls
-
-| Input | Action |
-|-------|--------|
-| `WASD` | 移动 |
-| `鼠标` | 环顾四周 |
-| `E` | 与物体互动 |
-| `Shift` | 冲刺 |
-| `ESC` | 暂停 / 关闭弹窗 |
-
-## 🚀 Quick Start
-
+1. 克隆仓库：
 ```bash
-# 1. Clone
-git clone https://github.com/chenl0427/mishi.git
-cd mishi
+git clone https://github.com/chenl0427/polyglot-learning.git
+cd polyglot-learning
+```
 
-# 2. Run
+2. 启动本地服务器：
+```bash
 python3 -m http.server 8080
-# or
-bash deploy.sh
-
-# 3. Play
-# Open http://localhost:8080
 ```
 
-Or simply open `index.html` in your browser.
+3. 在浏览器中打开：`http://localhost:8080`
 
-## 📁 Project Structure
-
-```
-escape-room-game/
-├── index.html          ← 🎮 Main Menu / Launcher
-├── game.html           ← 🎯 Game (3D Escape Room)
-├── landing.html        ← 🌐 Promo Landing Page
-├── deploy.sh           ← 🚀 One-click Deploy
-├── package.json        ← 📦 Project Config
-├── README.md           ← 📖 This File
-├── CHANGELOG.md        ← 📋 Version History
-├── WALKTHROUGH.md      ← 🗺️ Player Guide
-├── LICENSE             ← ⚖️ MIT License
-├── docs/
-│   └── GDD.md          ← 📄 Game Design Document
-└── assets/             ← 🎨 (Reserved for future assets)
-```
-
-## 🎯 Game Flow
+## 📁 项目结构
 
 ```
-🏠 Main Menu
-  ├── ▶ 开始游戏 → ⏳ Loading → 🎮 游戏
-  ├── ⚙ 设置（音效/音乐/灵敏度/提示）
-  ├── 👥 制作人员
-  └── 📖 游戏详情（Landing Page）
-
-🎮 游戏中
-  ├── 🔍 探索环境
-  ├── 🧩 解开谜题
-  ├── 📝 查看笔记
-  ├── 💡 获取提示
-  └── ⏸ ESC 暂停
+├── index.html          # 首页与登录注册
+├── dashboard.html      # 学习仪表盘
+├── courses.html        # 课程体系
+├── learn.html          # 互动练习
+├── community.html      # 学习社区
+├── achievements.html  # 成就中心
+├── package.json        # 项目配置
+└── README.md           # 项目说明
 ```
 
-## 🛠️ Tech Stack
+## 🎯 支持的语言
 
-| Technology | Purpose |
-|-----------|---------|
-| **Three.js r128** | 3D Rendering Engine |
-| **Web Audio API** | Sound Effects & Music |
-| **Pointer Lock API** | First-Person Controls |
-| **Canvas 2D** | Procedural Textures |
-| **CSS Animations** | UI Effects |
+- 🇺🇸 英语 (English)
+- 🇯🇵 日语 (日本語)
+- 🇰🇷 韩语 (한국어)
 
-## 📸 Pages
+## 📝 许可证
 
-| Page | Description |
-|------|-------------|
-| `index.html` | 主菜单（片头动画 + 开始/设置/制作人员） |
-| `game.html` | 游戏本体（3D密室逃脱） |
-| `landing.html` | 宣传页（电影级展示） |
+MIT License
 
-## 📄 License
+## 👤 作者
 
-MIT License - See [LICENSE](LICENSE) for details.
+Polyglot Team
 
 ---
 
-<div align="center">
-
-**DARK ROOM STUDIOS** · 2026
-
-*Built with Three.js · Zero dependencies · Zero build tools*
-
-</div>
+Made with ❤️ for language learners worldwide
