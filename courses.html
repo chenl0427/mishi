@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>课程体系 - Polyglot</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --bg-dark: #0f0f1a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-dark);
+  color: #fff;
+  min-height: 100vh;
+  padding-left: 280px;
+}
+
+.bg-gradient {
+  position: fixed;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse at 30% 30%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 70%, rgba(118, 75, 162, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 280px;
+  background: rgba(20, 20, 35, 0.95);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 40px;
+}
+.sidebar-nav { flex: 1; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.nav-item:hover { background: rgba(255, 255, 255, 0.05); color: white; }
+.nav-item.active {
+  background: rgba(102, 126, 234, 0.15);
+  color: white;
+  border-left: 3px solid #667eea;
+}
+.nav-item .icon { font-size: 20px; }
+.nav-item .label { font-weight: 500; }
+
+.user-section {
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+}
+.user-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+#main-content {
+  padding: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.page-header { margin-bottom: 30px; }
+.page-title { font-size: 36px; font-weight: 800; margin-bottom: 8px; }
+.page-subtitle { color: rgba(255, 255, 255, 0.6); font-size: 15px; }
+
+.lang-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+.lang-tab {
+  padding: 12px 28px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lang-tab:hover { background: rgba(255, 255, 255, 0.08); }
+.lang-tab.active {
+  background: var(--primary-gradient);
+  border-color: transparent;
+}
+
+.level-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+.level-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.level-card:hover {
+  border-color: rgba(102, 126, 234, 0.3);
+  transform: translateY(-2px);
+}
+.level-card.locked { opacity: 0.5; cursor: not-allowed; }
+.level-card.current {
+  border-color: rgba(102, 126, 234, 0.5);
+  background: rgba(102, 126, 234, 0.1);
+}
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.level-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+.level-badge.beginner { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+.level-badge.intermediate { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+.level-badge.advanced { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
+.level-badge.expert { background: rgba(255, 87, 108, 0.2); color: #f5576c; }
+.level-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.level-desc { font-size: 13px; color: rgba(255, 255, 255, 0.5); }
+.level-meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.level-meta span { display: flex; align-items: center; gap: 4px; }
+
+.course-detail {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 30px;
+}
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+.detail-title h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+.detail-title p { color: rgba(255, 255, 255, 0.5); font-size: 14px; }
+.detail-btn {
+  padding: 12px 28px;
+  background: var(--primary-gradient);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.detail-btn:hover { transform: translateY(-2px); }
+
+.chapters { margin-bottom: 20px; }
+.chapter-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.chapter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.chapter-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.chapter-item:hover { background: rgba(255, 255, 255, 0.06); }
+.chapter-item.completed { background: rgba(76, 175, 80, 0.1); }
+.chapter-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.chapter-info { flex: 1; }
+.chapter-name { font-size: 15px; font-weight: 500; }
+.chapter-desc { font-size: 12px; color: rgba(255, 255, 255, 0.5); }
+.chapter-progress {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.chapter-status {
+  font-size: 16px;
+}
+
+.course-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 30px;
+}
+.stat-item {
+  text-align: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+}
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.stat-label { font-size: 13px; color: rgba(255, 255, 255, 0.5); }
+
+@media (max-width: 1200px) {
+  .level-cards { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  body { padding-left: 0; }
+  #sidebar { display: none; }
+  .level-cards { grid-template-columns: 1fr; }
+  .course-stats { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="bg-gradient"></div>
+
+<aside id="sidebar">
+  <div class="logo">Polyglot</div>
+  <nav class="sidebar-nav">
+    <div class="nav-item" onclick="navigateTo('dashboard')">
+      <span class="icon">📊</span>
+      <span class="label">学习仪表盘</span>
+    </div>
+    <div class="nav-item active" onclick="navigateTo('courses')">
+      <span class="icon">📚</span>
+      <span class="label">课程体系</span>
+    </div>
+    <div class="nav-item" onclick="navigateTo('learn')">
+      <span class="icon">✏️</span>
+      <span class="label">互动练习</span>
+    </div>
+    <div class="nav-item" onclick="navigateTo('community')">
+      <span class="icon">👥</span>
+      <span class="label">学习社区</span>
+    </div>
+    <div class="nav-item" onclick="navigateTo('achievements')">
+      <span class="icon">🏆</span>
+      <span class="label">成就中心</span>
+    </div>
+  </nav>
+  <div class="user-section">
+    <div class="user-info">
+      <div class="user-avatar">👤</div>
+      <div>
+        <div style="font-weight: 600; font-size: 14px;">学习者</div>
+        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Lv.8 初级学者</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main id="main-content">
+  <header class="page-header">
+    <h1 class="page-title">课程体系</h1>
+    <p class="page-subtitle">选择您想学习的语言，开启学习之旅</p>
+  </header>
+
+  <div class="lang-tabs">
+    <div class="lang-tab active" onclick="switchLang('english')">
+      <span>🇺🇸</span>
+      <span>英语</span>
+    </div>
+    <div class="lang-tab" onclick="switchLang('japanese')">
+      <span>🇯🇵</span>
+      <span>日语</span>
+    </div>
+    <div class="lang-tab" onclick="switchLang('korean')">
+      <span>🇰🇷</span>
+      <span>韩语</span>
+    </div>
+  </div>
+
+  <div>
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">学习等级</h2>
+    <div class="level-cards">
+      <div class="level-card current" onclick="selectLevel('beginner')">
+        <div class="level-header">
+          <div class="level-badge beginner">L1</div>
+          <span>📖</span>
+        </div>
+        <div class="level-title">入门篇</div>
+        <div class="level-desc">零基础入门，掌握基础词汇和日常表达</div>
+        <div class="level-meta">
+          <span>📚 24课时</span>
+          <span>✅ 12/24</span>
+        </div>
+      </div>
+      <div class="level-card" onclick="selectLevel('intermediate')">
+        <div class="level-header">
+          <div class="level-badge intermediate">L2</div>
+          <span>📖</span>
+        </div>
+        <div class="level-title">进阶篇</div>
+        <div class="level-desc">拓展词汇量，掌握基础语法结构</div>
+        <div class="level-meta">
+          <span>📚 32课时</span>
+          <span>✅ 0/32</span>
+        </div>
+      </div>
+      <div class="level-card locked">
+        <div class="level-header">
+          <div class="level-badge advanced">L3</div>
+          <span>🔒</span>
+        </div>
+        <div class="level-title">高级篇</div>
+        <div class="level-desc">深入学习，提升听说读写综合能力</div>
+        <div class="level-meta">
+          <span>📚 40课时</span>
+          <span>🔒 未解锁</span>
+        </div>
+      </div>
+      <div class="level-card locked">
+        <div class="level-header">
+          <div class="level-badge expert">L4</div>
+          <span>🔒</span>
+        </div>
+        <div class="level-title">精通篇</div>
+        <div class="level-desc">专业级别，达到母语者水平</div>
+        <div class="level-meta">
+          <span>📚 48课时</span>
+          <span>🔒 未解锁</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="course-detail">
+    <div class="detail-header">
+      <div class="detail-title">
+        <h2>入门篇 - 基础词汇与日常对话</h2>
+        <p>掌握日常必备的英语词汇和基本对话场景，打好学习基础</p>
+      </div>
+      <button class="detail-btn" onclick="navigateTo('learn')">开始学习</button>
+    </div>
+
+    <div class="chapters">
+      <div class="chapter-title">章节列表</div>
+      <div class="chapter-list">
+        <div class="chapter-item completed">
+          <div class="chapter-icon" style="background: rgba(76,175,80,0.2);">✅</div>
+          <div class="chapter-info">
+            <div class="chapter-name">Lesson 1 - 问候与自我介绍</div>
+            <div class="chapter-desc">学习基本问候语和自我介绍表达方式</div>
+          </div>
+          <div class="chapter-progress">100%</div>
+          <div class="chapter-status">✓</div>
+        </div>
+        <div class="chapter-item completed">
+          <div class="chapter-icon" style="background: rgba(76,175,80,0.2);">✅</div>
+          <div class="chapter-info">
+            <div class="chapter-name">Lesson 2 - 数字与时间</div>
+            <div class="chapter-desc">学习数字表达和时间相关词汇</div>
+          </div>
+          <div class="chapter-progress">100%</div>
+          <div class="chapter-status">✓</div>
+        </div>
+        <div class="chapter-item">
+          <div class="chapter-icon" style="background: rgba(102,126,234,0.2);">📖</div>
+          <div class="chapter-info">
+            <div class="chapter-name">Lesson 3 - 日常购物</div>
+            <div class="chapter-desc">学习购物相关词汇和对话场景</div>
+          </div>
+          <div class="chapter-progress">60%</div>
+          <div class="chapter-status">▶</div>
+        </div>
+        <div class="chapter-item">
+          <div class="chapter-icon" style="background: rgba(255,255,255,0.05);">📖</div>
+          <div class="chapter-info">
+            <div class="chapter-name">Lesson 4 - 餐厅点餐</div>
+            <div class="chapter-desc">学习餐厅场景对话和食物词汇</div>
+          </div>
+          <div class="chapter-progress">0%</div>
+          <div class="chapter-status">○</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="course-stats">
+      <div class="stat-item">
+        <div class="stat-value">12</div>
+        <div class="stat-label">已完成课时</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">86</div>
+        <div class="stat-label">已学单词</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">50%</div>
+        <div class="stat-label">课程进度</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+function navigateTo(page) {
+  window.location.href = page + '.html';
+}
+
+function switchLang(lang) {
+  const tabs = document.querySelectorAll('.lang-tab');
+  tabs.forEach(tab => tab.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function selectLevel(level) {
+  const cards = document.querySelectorAll('.level-card');
+  cards.forEach(card => card.classList.remove('current'));
+  event.target.classList.add('current');
+}
+</script>
+</body>
+</html>

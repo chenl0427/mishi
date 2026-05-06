@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习社区 - Polyglot</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --bg-dark: #0f0f1a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-dark);
+  color: #fff;
+  min-height: 100vh;
+  padding-left: 280px;
+}
+
+.bg-gradient {
+  position: fixed;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse at 20% 80%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(118, 75, 162, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 280px;
+  background: rgba(20, 20, 35, 0.95);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 40px;
+}
+.sidebar-nav { flex: 1; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.nav-item:hover { background: rgba(255, 255, 255, 0.05); color: white; }
+.nav-item.active {
+  background: rgba(102, 126, 234, 0.15);
+  color: white;
+  border-left: 3px solid #667eea;
+}
+.nav-item .icon { font-size: 20px; }
+.nav-item .label { font-weight: 500; }
+
+.user-section {
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+}
+.user-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+#main-content {
+  padding: 40px;
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+}
+
+.page-header { margin-bottom: 30px; }
+.page-title { font-size: 36px; font-weight: 800; margin-bottom: 8px; }
+.page-subtitle { color: rgba(255, 255, 255, 0.6); font-size: 15px; }
+
+.create-post {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 30px;
+}
+.post-input {
+  display: flex;
+  gap: 16px;
+}
+.post-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.post-input-area {
+  flex: 1;
+}
+.post-input-area input {
+  width: 100%;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  color: white;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+.post-input-area input::placeholder { color: rgba(255,255,255,0.4); }
+.post-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.post-tags {
+  display: flex;
+  gap: 8px;
+}
+.tag-btn {
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.tag-btn:hover {
+  background: rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.3);
+  color: white;
+}
+.tag-btn.active {
+  background: rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.5);
+  color: white;
+}
+.submit-btn {
+  padding: 10px 24px;
+  background: var(--primary-gradient);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.submit-btn:hover { transform: translateY(-2px); }
+
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.tab {
+  padding: 10px 24px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+.tab:hover { background: rgba(255, 255, 255, 0.08); }
+.tab.active {
+  background: rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.post-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 24px;
+  transition: all 0.3s;
+}
+.post-card:hover {
+  border-color: rgba(102, 126, 234, 0.2);
+}
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.author-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.author-info {
+  flex: 1;
+}
+.author-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.post-time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.post-tag {
+  padding: 4px 12px;
+  background: rgba(102, 126, 234, 0.2);
+  border-radius: 12px;
+  font-size: 12px;
+  color: #a78bfa;
+}
+.post-content {
+  margin-bottom: 16px;
+}
+.post-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.post-text {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+}
+.post-image {
+  width: 100%;
+  height: 200px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
+.post-actions {
+  display: flex;
+  gap: 30px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.3s;
+}
+.action-item:hover {
+  color: white;
+}
+.action-item.liked {
+  color: #f5576c;
+}
+.action-item span { font-size: 14px; }
+.action-item .icon { font-size: 16px; }
+
+.sidebar {
+  width: 320px;
+}
+.sidebar-section {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.sidebar-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.top-users {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.user-item-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.user-item-info {
+  flex: 1;
+}
+.user-item-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+.user-item-points {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.user-item-rank {
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255, 193, 7, 0.8);
+}
+
+.trending-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.trending-tag {
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.trending-tag:hover {
+  background: rgba(102, 126, 234, 0.2);
+  color: white;
+}
+
+.community-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 30px;
+}
+.stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+}
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.stat-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 1024px) {
+  body { padding-left: 0; }
+  #sidebar { display: none; }
+  .sidebar { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="bg-gradient"></div>
+
+<aside id="sidebar">
+  <div class="logo">Polyglot</div>
+  <nav class="sidebar-nav">
+    <div class="nav-item" onclick="navigateTo('dashboard')">
+      <span class="icon">📊</span>
+      <span class="label">学习仪表盘</span>
+    </div>
+    <div class="nav-item" onclick="navigateTo('courses')">
+      <span class="icon">📚</span>
+      <span class="label">课程体系</span>
+    </div>
+    <div class="nav-item" onclick="navigateTo('learn')">
+      <span class="icon">✏️</span>
+      <span class="label">互动练习</span>
+    </div>
+    <div class="nav-item active" onclick="navigateTo('community')">
+      <span class="icon">👥</span>
+      <span class="label">学习社区</span>
+    </div>
+    <div class="nav-item" onclick="navigateTo('achievements')">
+      <span class="icon">🏆</span>
+      <span class="label">成就中心</span>
+    </div>
+  </nav>
+  <div class="user-section">
+    <div class="user-info">
+      <div class="user-avatar">👤</div>
+      <div>
+        <div style="font-weight: 600; font-size: 14px;">学习者</div>
+        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Lv.8 初级学者</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main id="main-content">
+  <header class="page-header">
+    <h1 class="page-title">学习社区</h1>
+    <p class="page-subtitle">与志同道合的学习者交流分享，共同进步</p>
+  </header>
+
+  <div class="community-stats">
+    <div class="stat-card">
+      <div class="stat-value">12.5K</div>
+      <div class="stat-label">社区成员</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">892</div>
+      <div class="stat-label">今日活跃</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">3.2K</div>
+      <div class="stat-label">本月帖子</div>
+    </div>
+  </div>
+
+  <div class="create-post">
+    <div class="post-input">
+      <div class="post-avatar">👤</div>
+      <div class="post-input-area">
+        <input type="text" placeholder="分享你的学习心得或提问...">
+        <div class="post-actions">
+          <div class="post-tags">
+            <button class="tag-btn">#英语学习</button>
+            <button class="tag-btn">#日语学习</button>
+            <button class="tag-btn">#韩语学习</button>
+            <button class="tag-btn">#学习心得</button>
+          </div>
+          <button class="submit-btn">发布</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active">🔥 热门</div>
+    <div class="tab">💬 最新</div>
+    <div class="tab">📚 学习心得</div>
+    <div class="tab">❓ 问题求助</div>
+  </div>
+
+  <div class="posts-list">
+    <div class="post-card">
+      <div class="post-header">
+        <div class="author-avatar" style="background: linear-gradient(135deg, #667eea, #764ba2);">🌍</div>
+        <div class="author-info">
+          <div class="author-name">语言学习者</div>
+          <div class="post-time">2小时前</div>
+        </div>
+        <span class="post-tag">#英语学习</span>
+      </div>
+      <div class="post-content">
+        <div class="post-title">分享我的英语学习打卡第30天心得</div>
+        <div class="post-text">坚持学习英语已经一个月了，每天30分钟的学习让我的词汇量有了明显提升。最近开始尝试看英文电影，虽然还需要字幕，但已经能听懂不少日常对话了！推荐大家试试这种沉浸式学习方法。</div>
+        <div class="post-image">📝</div>
+      </div>
+      <div class="post-actions">
+        <div class="action-item">
+          <span class="icon">❤️</span>
+          <span>128</span>
+        </div>
+        <div class="action-item">
+          <span class="icon">💬</span>
+          <span>32</span>
+        </div>
+        <div class="action-item">
+          <span class="icon">🔗</span>
+          <span>分享</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="post-card">
+      <div class="post-header">
+        <div class="author-avatar" style="background: linear-gradient(135deg, #ffc107, #ff9800);">🌸</div>
+        <div class="author-info">
+          <div class="author-name">日语初学者</div>
+          <div class="post-time">5小时前</div>
+        </div>
+        <span class="post-tag">#日语学习</span>
+      </div>
+      <div class="post-content">
+        <div class="post-title">五十音图记忆技巧分享</div>
+        <div class="post-text">刚开始学五十音的时候觉得很难记，后来发现把假名和中文汉字联系起来记忆效果很好。比如「あ」像汉字「安」的草书写法，「い」像「以」字。分享给正在学习日语的朋友们！</div>
+      </div>
+      <div class="post-actions">
+        <div class="action-item">
+          <span class="icon">❤️</span>
+          <span>89</span>
+        </div>
+        <div class="action-item">
+          <span class="icon">💬</span>
+          <span>15</span>
+        </div>
+        <div class="action-item">
+          <span class="icon">🔗</span>
+          <span>分享</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="post-card">
+      <div class="post-header">
+        <div class="author-avatar" style="background: linear-gradient(135deg, #4caf50, #8bc34a);">🌟</div>
+        <div class="author-info">
+          <div class="author-name">韩语爱好者</div>
+          <div class="post-time">昨天</div>
+        </div>
+        <span class="post-tag">#问题求助</span>
+      </div>
+      <div class="post-content">
+        <div class="post-title">请教韩语敬语的用法</div>
+        <div class="post-text">最近在学习韩语敬语，对「~요」和「~습니다」的使用场景有点困惑。什么时候用哪种形式呢？有没有小伙伴能帮忙解释一下？谢谢！</div>
+      </div>
+      <div class="post-actions">
+        <div class="action-item">
+          <span class="icon">❤️</span>
+          <span>45</span>
+        </div>
+        <div class="action-item">
+          <span class="icon">💬</span>
+          <span>28</span>
+        </div>
+        <div class="action-item">
+          <span class="icon">🔗</span>
+          <span>分享</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+function navigateTo(page) {
+  window.location.href = page + '.html';
+}
+</script>
+</body>
+</html>
